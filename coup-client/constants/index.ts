@@ -12,4 +12,4 @@ export const rolesMap = {
     [ROLES.LORD]: "男爵",
     [ROLES.ASSASSIN]: "刺客",
     [ROLES.CAPTAIN]: "队长",
-}
+};

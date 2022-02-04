@@ -11,8 +11,8 @@ export function Header() {
                 color: "red",
             }}
         >
-            <div>John&apos;s turn</div>
-            <div>Time Left: 33s</div>
+            <div>John的回合</div>
+            <div>回合时间: 33s</div>
         </Box>
     );
 }
