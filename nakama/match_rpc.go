@@ -19,7 +19,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/heroiclabs/nakama-project-template/api"
+	"github.com/xcxcx1996/coup/api"
 	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/heroiclabs/nakama-common/runtime"
@@ -65,7 +65,7 @@ func rpcFindMatch(marshaler *protojson.MarshalOptions, unmarshaler *protojson.Un
 			matchIDs = append(matchIDs, matchID)
 		}
 
-		response, err := marshaler.Marshal(&api.RpcFindMatchResponse{MatchIds: []string{"this is id"}})
+		response, err := marshaler.Marshal(&api.RpcFindMatchResponse{MatchIds: matchIDs})
 		if err != nil {
 			logger.Error("error marshaling response payload: %v", err.Error())
 			return "", errMarshal

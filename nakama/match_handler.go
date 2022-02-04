@@ -12,8 +12,9 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/heroiclabs/nakama-common/runtime"
-	"github.com/heroiclabs/nakama-project-template/api"
+	"github.com/xcxcx1996/coup/api"
 	"github.com/xcxcx1996/coup/model"
+	"github.com/xcxcx1996/coup/service"
 )
 
 const (
@@ -29,11 +30,15 @@ const (
 )
 
 // Compile-time check to make sure all required functions are implemented.
-var _ runtime.Match = &MatchHandler{}
+var serv = service.New()
+var _ runtime.Match = &MatchHandler{
+	service: serv,
+}
 
 type MatchHandler struct {
 	marshaler   *protojson.MarshalOptions
 	unmarshaler *protojson.UnmarshalOptions
+	service     *service.MatchService
 }
 
 func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, params map[string]interface{}) (interface{}, int, string) {
@@ -55,7 +60,7 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 		logger.WithField("error", err).Error("match init failed")
 		labelJSON = []byte("{}")
 	}
-
+	logger.Debug("*****创建房间", labelJSON)
 	return &model.MatchState{
 		Random: rand.New(rand.NewSource(time.Now().UnixNano())),
 		Label:  Label,
@@ -224,6 +229,33 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 	// There's a game in progress. Check for input, update match state, and send messages to clients.
 	for _, message := range messages {
 		switch api.OpCode(message.GetOpCode()) {
+		case api.OpCode_OPCODE_ASSASSIN:
+			m.service.BeforeAssassin(ctx, dispatcher, s, message)
+			log.Println("this is Assassin")
+		case api.OpCode_OPCODE_DENY_KILL:
+
+			log.Println("this is Assassin")
+		case api.OpCode_OPCODE_DISCARD:
+			log.Println("this is Assassin")
+		case api.OpCode_OPCODE_DENY_STEAL:
+			log.Println("this is Assassin")
+		case api.OpCode_OPCODE_COUP:
+			log.Println("this is Assassin")
+		case api.OpCode_OPCODE_DRAW_CARD:
+			log.Println("this is Assassin")
+		case api.OpCode_OPCODE_DRAW_COINS:
+			log.Println("this is Assassin")
+		case api.OpCode_OPCODE_CHANGE_CARD:
+			log.Println("this is Assassin")
+		case api.OpCode_OPCODE_DRAW_THREE_COINS:
+			log.Println("this is Assassin")
+		case api.OpCode_OPCODE_STEAL_CARD:
+			log.Println("this is Assassin")
+
+		case api.OpCode_OPCODE_QUESTION:
+			log.Println("this is Assassin")
+		case api.OpCode_OPCODE_DONE:
+			log.Println("this is Assassin")
 
 		// case api.OpCode_OPCODE_MOVE:
 		// 	mark := s.marks[message.GetUserId()]

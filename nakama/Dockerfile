@@ -2,12 +2,11 @@ FROM heroiclabs/nakama-pluginbuilder:3.9.0 AS builder
 
 ENV GO111MODULE on
 ENV CGO_ENABLED 1
-ENV GOPRIVATE "github.com/heroiclabs/nakama-project-template"
+# ENV GOPRIVATE "github.com/heroiclabs/nakama-project-template"
 
 ENV GO111MODULE=on \
     CGO_ENABLED=0 \
-        GOPROXY="https://goproxy.cn,direct"
-#RUN go get github.com/cespare/reflex
+    GOPROXY="https://goproxy.cn,direct"
 
 WORKDIR /backend
 COPY . .

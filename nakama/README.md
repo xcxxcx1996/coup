@@ -1,55 +1,9 @@
-Nakama Project Template
+Coup Nakama
 ===
 
-> An example project template on how to set up and write custom logic in Nakama server.
+> 政变游戏后端 for golang
 
-The codebase shows a few simple gameplay features written in all three of the runtime framework languages supported by the server: Go, Lua, and TypeScript. The code shows how to read/write storage objects, send in-app notifications, parse JSON, update player wallets, and handle errors.
 
-For more documentation have a look at:
-
-* https://heroiclabs.com/docs/runtime-code-basics/
-* https://heroiclabs.com/docs/storage-collections/
-* https://heroiclabs.com/docs/user-accounts/#virtual-wallet
-* https://heroiclabs.com/docs/social-in-app-notifications/
-* https://heroiclabs.com/docs/gameplay-multiplayer-server-multiplayer/
-* https://heroiclabs.com/docs/runtime-code-function-reference/
-
-For a detailed guide on setting up TypeScript check out the [Setup page](https://heroiclabs.com/docs/runtime-code-typescript-setup/#initialize-the-project).
-
-__NOTE__ You can remove the Go, Lua or TypeScript code within this project to develop with just the single language you prefer.
-
-### Prerequisites
-
-The codebase requires these development tools:
-
-* Go compiler and runtime: 1.15.2 or greater.
-* Docker Engine: 19.0.0 or greater.
-* Node v14 (active LTS) or greater.
-* Basic UNIX tools or knowledge on the Windows equivalents.
-
-### Go Dependencies
-
-The project uses Go modules which should be vendored as normal:
-
-```shell
-env GO111MODULE=on GOPRIVATE="github.com" go mod vendor
-```
-
-### TypeScript Dependencies
-
-The project uses NPM to manage dependencies which can be installed as normal:
-
-```shell
-npm install
-```
-
-Before you start the server you can transpile the TypeScript code to JavaScript code with the TypeScript compiler:
-
-```shell
-npx tsc
-```
-
-The bundled JavaScript code output can be found in "build/index.js".
 
 ### Start
 

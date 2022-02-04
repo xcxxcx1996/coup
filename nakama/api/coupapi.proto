@@ -44,8 +44,8 @@ enum State{
     // 保护自己，包括防偷牌，看牌，和刺杀
     DENY_MONEY=3;
     DENY_STEAL=4;
-    DENY_CHECK=5;
-    DENY_ASSASSIN=6;
+    DENY_ASSASSIN=5;
+    // DENY_CHECK=5;
 }
 
 // The complete set of opcodes used for communication between clients and server.
@@ -56,14 +56,30 @@ enum OpCode {
     OPCODE_START=1;
     // 玩家抽卡
     OPCODE_DRAW_CARD=2;
-    // 抽卡
-    OPCODE_DRAW_COINS = 3;
-    // 发动技能
-    OPCODE_SKILL = 4;
+    // 玩家弃置卡牌
+    OPCODE_DISCARD=3;
+    // 拿钱
+    OPCODE_DRAW_COINS = 4;
     // 质疑
     OPCODE_QUESTION=5;
     // 比赛结束
     OPCODE_DONE = 6;
+    // **发动技能**
+    //偷牌
+    OPCODE_STEAL_CARD = 7;
+    //换牌
+    OPCODE_CHANGE_CARD=8;
+    //刺杀
+    OPCODE_ASSASSIN=9;
+    //拿3块钱
+    OPCODE_DRAW_THREE_COINS=10;
+    //防止偷拍
+    OPCODE_DENY_STEAL=11;
+    //防止刺杀
+    OPCODE_DENY_KILL=12;
+    //政变
+    OPCODE_COUP=13;
+    // OPCODE_DRAW_THREE_COINS=10;
 }
 
 message PlayerInfo{
@@ -83,7 +99,8 @@ message Start {
     // The assignments of the marks to players for this round.
     map<string, PlayerInfo> playerInfos = 1;
     // current_player_id 谁的回合
-    string player  = 2;
+    string current_player_id  = 2;
+    // string question_player_id=3;
     // The deadline time by which the player must submit their move, or forfeit.
     int64 deadline = 3;
     //比赛信息
@@ -95,9 +112,12 @@ message Update {
     // The assignments of the marks to players for this round.
     map<string, PlayerInfo> playerInfos = 1;
     // current_player_id 谁的回合
-    string player  = 2;
+    string current_player_id  = 2;
+    string question_player_id=3;
     // The deadline time by which the player must submit their move, or forfeit.
-    int64 deadline = 3;
+    int64 deadline = 4;
+    //比赛信息
+    string message=5;
 }
 
 // Complete game round with winner announcement.
@@ -113,29 +133,56 @@ message Done {
     // int64 next_game_start = 4;
 }
 
-// A player intends to make a move.
-// message Move {
-//     int32 position = 1;
-// }
 message Question{
-
+    string player_id=1;
 }
 
 message GetCoin{
-
+    string player_id=1;
+    int32 coins=2;
 }
 
-message Skill{
-    Role role=1;
-    string player=2;
-    repeated string args=3; 
+message DrawCard{
+    string player_id=1;
+}
+message Discard{
+    string player_id=1;
+    string card_id=2;
 }
 
+message StealCard{
+    string player_id=1;
+}
+message ChangeCard{
+    string player_id=1;
+}
+
+message Assassin{
+    string player_id=1;
+    //Card
+    string card_id=2;
+}
+message DrawThreeCoins{
+    string player_id=1;
+}
+
+message DenySteal{
+    string player_id=1;
+}
+message DenyKill{
+    string player_id=1;
+}
+message Coup{
+    string player_id=1;
+    //Card
+    string card_id=2;
+}
 // Payload for an RPC request to find a match.
 message RpcFindMatchRequest {
     // // User can choose a fast or normal speed match.
     bool fast = 1;
 }
+
 
 // Payload for an RPC response containing match IDs the user can join.
 message RpcFindMatchResponse {
