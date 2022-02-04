@@ -2,13 +2,15 @@ import { Button, Input } from "@mui/material";
 import type { NextPage } from "next";
 import styles from "../styles/Home.module.css";
 import React, { useEffect, useState } from "react";
-import { nakamaCLient } from "../utils/nakama";
+import { nakamaClient } from "../utils/nakama";
+import { useRouter } from "next/router";
 
 const Home: NextPage = () => {
     const [name, setName] = useState("");
     const [disableUsername, setDisableUsername] = useState(false);
+    const router = useRouter();
     useEffect(() => {
-        const user = nakamaCLient.getUser();
+        const user = nakamaClient.getUser();
         if (user) {
             setName(user.username as string);
             setDisableUsername(true);
@@ -21,8 +23,9 @@ const Home: NextPage = () => {
     };
     const handleClick = async () => {
         try {
-            await nakamaCLient.authenticate(name, !disableUsername);
-            await nakamaCLient.findMatch();
+            await nakamaClient.authenticate(name);
+            await nakamaClient.findMatch();
+            await router.push("in-game");
         } catch (e) {
             console.log("-> e", e);
         }

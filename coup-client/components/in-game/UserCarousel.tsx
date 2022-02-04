@@ -70,7 +70,7 @@ export function UserCarousel() {
                 animation={"slide"}
             >
                 {users.map((user) => (
-                    <UserInfo user={user} />
+                    <UserInfo key={user.name} user={user} />
                 ))}
             </Carousel>
         </Box>
