@@ -14,3 +14,40 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+
+# coup-client
+coup-client/node_modules
+coup-client/.pnp
+coup-client/.pnp.js
+
+# testing
+coup-client/coverage
+
+# next.js
+coup-client/.next/
+coup-client/out/
+
+# production
+coup-client/build
+
+# misc
+coup-client/.DS_Store
+coup-client/*.pem
+
+# debug
+coup-client/npm-debug.log*
+coup-client/yarn-debug.log*
+coup-client/yarn-error.log*
+
+# local env files
+coup-client/.env.local
+coup-client/.env.development.local
+coup-client/.env.test.local
+coup-client/.env.production.local
+
+# vercel
+coup-client/.vercel
+
+# typescript
+coup-client/*.tsbuildinfo
