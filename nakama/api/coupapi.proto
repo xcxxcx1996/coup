@@ -1,0 +1,144 @@
+// Copyright 2020 The Nakama Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+// The realtime protocol for the template match engine.
+package api;
+
+option go_package = "./api";
+
+
+
+// The marks available in the game.
+enum Role {
+    // No mark specified. Unused.
+    DIPLOMAT = 0;
+    // X (Cross).
+    QUEEN = 1;
+    // O (Nought).
+    CAPTAIN = 2;
+    ASSASSIN=3;
+    BARON=4;
+}
+
+
+enum State{
+    // 什么都做不了
+    IDLE=0;
+    // 自己回合开始，可以拿1，2，3块钱，和施放技能
+    START=1;
+    // 质疑
+    QUESTION=2;
+    // 保护自己，包括防偷牌，看牌，和刺杀
+    DENY_MONEY=3;
+    DENY_STEAL=4;
+    DENY_CHECK=5;
+    DENY_ASSASSIN=6;
+}
+
+// The complete set of opcodes used for communication between clients and server.
+enum OpCode {
+    // No opcode specified. Unused.
+    OPCODE_UNCODE = 0;
+    // 开始游戏
+    OPCODE_START=1;
+    // 玩家抽卡
+    OPCODE_DRAW_CARD=2;
+    // 抽卡
+    OPCODE_DRAW_COINS = 3;
+    // 发动技能
+    OPCODE_SKILL = 4;
+    // 质疑
+    OPCODE_QUESTION=5;
+    // 比赛结束
+    OPCODE_DONE = 6;
+}
+
+message PlayerInfo{
+    string name=1;
+    repeated Card cards=2;
+    int64 coins=3;
+    State state=4;
+}
+
+message Card{
+    string id=1;
+    Role role=2;
+}
+
+// Message data sent by server to clients representing a new game round starting.
+message Start {
+    // The assignments of the marks to players for this round.
+    map<string, PlayerInfo> playerInfos = 1;
+    // current_player_id 谁的回合
+    string player  = 2;
+    // The deadline time by which the player must submit their move, or forfeit.
+    int64 deadline = 3;
+    //比赛信息
+    string message=4;
+}
+
+// A game state update sent by the server to clients.
+message Update {
+    // The assignments of the marks to players for this round.
+    map<string, PlayerInfo> playerInfos = 1;
+    // current_player_id 谁的回合
+    string player  = 2;
+    // The deadline time by which the player must submit their move, or forfeit.
+    int64 deadline = 3;
+}
+
+// Complete game round with winner announcement.
+message Done {
+    // // The final state of the board.
+    // repeated Mark board = 1;
+    // // The winner of the game, if any. Unspecified if it's a draw.
+    // Mark winner = 2;
+    // // Winner board positions, if any. Used to display the row, column, or diagonal that won the game.
+    // // May be empty if it's a draw or the winner is by forfeit.
+    // repeated int32 winner_positions = 3;
+    // // Next round start time.
+    // int64 next_game_start = 4;
+}
+
+// A player intends to make a move.
+// message Move {
+//     int32 position = 1;
+// }
+message Question{
+
+}
+
+message GetCoin{
+
+}
+
+message Skill{
+    Role role=1;
+    string player=2;
+    repeated string args=3; 
+}
+
+// Payload for an RPC request to find a match.
+message RpcFindMatchRequest {
+    // // User can choose a fast or normal speed match.
+    bool fast = 1;
+}
+
+// Payload for an RPC response containing match IDs the user can join.
+message RpcFindMatchResponse {
+    // One or more matches that fit the user's request.
+    repeated string match_ids = 1;
+}

@@ -4,7 +4,7 @@
 *.dll
 *.so
 *.dylib
-./nakama/vendor
+/nakama/vendor/*
 
 # Test binary, built with `go test -c`
 *.test
