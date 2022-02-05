@@ -17,9 +17,10 @@ package main
 import (
 	"context"
 	"database/sql"
-	"github.com/heroiclabs/nakama-common/runtime"
-	"google.golang.org/protobuf/encoding/protojson"
 	"time"
+
+	"github.com/heroiclabs/nakama-common/runtime"
+	"github.com/xcxcx1996/coup/service"
 )
 
 var (
@@ -39,25 +40,19 @@ const (
 func InitModule(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, initializer runtime.Initializer) error {
 	initStart := time.Now()
 
-	marshaler := &protojson.MarshalOptions{
-		UseEnumNumbers: true,
-	}
-	unmarshaler := &protojson.UnmarshalOptions{
-		DiscardUnknown: false,
-	}
+	serv := service.New()
 
- 	if err := initializer.RegisterRpc(rpcIdRewards, rpcRewards); err != nil {
+	if err := initializer.RegisterRpc(rpcIdRewards, rpcRewards); err != nil {
 		return err
 	}
 
-	if err := initializer.RegisterRpc(rpcIdFindMatch, rpcFindMatch(marshaler, unmarshaler)); err != nil {
+	if err := initializer.RegisterRpc(rpcIdFindMatch, rpcFindMatch(serv.Marshaler, serv.Unmarshaler)); err != nil {
 		return err
 	}
 
 	if err := initializer.RegisterMatch(moduleName, func(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule) (runtime.Match, error) {
 		return &MatchHandler{
-			marshaler:   marshaler,
-			unmarshaler: unmarshaler,
+			service: serv,
 		}, nil
 	}); err != nil {
 		return err

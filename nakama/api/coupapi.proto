@@ -23,13 +23,15 @@ option go_package = "./api";
 
 // The marks available in the game.
 enum Role {
-    // No mark specified. Unused.
+    // DIPLOMAT 0
     DIPLOMAT = 0;
-    // X (Cross).
+    // QUEEN 1
     QUEEN = 1;
-    // O (Nought).
+    // CAPTAIN 2
     CAPTAIN = 2;
+    // ASSASSIN 3
     ASSASSIN=3;
+    // BARON 4
     BARON=4;
 }
 
@@ -45,6 +47,7 @@ enum State{
     DENY_MONEY=3;
     DENY_STEAL=4;
     DENY_ASSASSIN=5;
+    DISCARD=6;
     // DENY_CHECK=5;
 }
 
@@ -66,7 +69,7 @@ enum OpCode {
     OPCODE_DONE = 6;
     // **发动技能**
     //偷牌
-    OPCODE_STEAL_CARD = 7;
+    OPCODE_STEAL_COINS = 7;
     //换牌
     OPCODE_CHANGE_CARD=8;
     //刺杀
@@ -77,19 +80,29 @@ enum OpCode {
     OPCODE_DENY_STEAL=11;
     //防止刺杀
     OPCODE_DENY_KILL=12;
+    // 阻止拿3块钱
+    OPCODE_DENY_MONEY=13;
+
     //政变
-    OPCODE_COUP=13;
+    OPCODE_COUP=14;
+    
     // OPCODE_DRAW_THREE_COINS=10;
+    OPCODE_READY_START=15;
+    OPCODE_UPDATE=16;
+    OPCODE_REJECTED=17;
 }
 
 message PlayerInfo{
-    string name=1;
-    repeated Card cards=2;
-    int64 coins=3;
-    State state=4;
+    //{"id":"1","name":"leo",cards:[{"id":"1","role":1}],"coins":10,state:1}
+    string id=1;
+    string name=2;
+    repeated Card cards=3;
+    int64 coins=4;
+    State state=5;
 }
 
 message Card{
+    //{"id":"","role":1}
     string id=1;
     Role role=2;
 }
@@ -132,46 +145,53 @@ message Done {
     // // Next round start time.
     // int64 next_game_start = 4;
 }
+message ReadyToStart{
+    int64 next_game_start = 1;
+}
 
 message Question{
-    string player_id=1;
+    bool is_question=1;
 }
 
 message GetCoin{
-    string player_id=1;
     int32 coins=2;
 }
 
-message DrawCard{
-    string player_id=1;
-}
+
 message Discard{
     string player_id=1;
     string card_id=2;
 }
 
-message StealCard{
+message StealCoins{
     string player_id=1;
 }
-message ChangeCard{
+message ChangeSingleCard{
     string player_id=1;
+    string card_id=2;
+    
 }
+
+message DenyAssassin{
+    bool is_deny=1; 
+}
+
+message DenyMoney{
+    bool is_deny=1;
+}
+
+message DenySteal{
+    bool is_deny=1;
+}
+
+
 
 message Assassin{
     string player_id=1;
     //Card
     string card_id=2;
 }
-message DrawThreeCoins{
-    string player_id=1;
-}
 
-message DenySteal{
-    string player_id=1;
-}
-message DenyKill{
-    string player_id=1;
-}
 message Coup{
     string player_id=1;
     //Card

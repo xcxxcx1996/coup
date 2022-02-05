@@ -8,7 +8,6 @@ import (
 	"math/rand"
 	"time"
 
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/heroiclabs/nakama-common/runtime"
@@ -20,9 +19,9 @@ import (
 const (
 	moduleName = "coup"
 
-	tickRate = 5
-
-	maxEmptySec = 30
+	tickRate       = 5
+	MAX_PLAYER_NUM = 1
+	maxEmptySec    = 30
 
 	// delayBetweenGamesSec = 5
 	turnTimeFastSec   = 10
@@ -36,9 +35,7 @@ var _ runtime.Match = &MatchHandler{
 }
 
 type MatchHandler struct {
-	marshaler   *protojson.MarshalOptions
-	unmarshaler *protojson.UnmarshalOptions
-	service     *service.MatchService
+	service *service.MatchService
 }
 
 func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, params map[string]interface{}) (interface{}, int, string) {
@@ -60,10 +57,11 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 		logger.WithField("error", err).Error("match init failed")
 		labelJSON = []byte("{}")
 	}
-	logger.Debug("*****创建房间", labelJSON)
+	// logger.Debug("*****创建房间", labelJSON)
 	return &model.MatchState{
-		Random: rand.New(rand.NewSource(time.Now().UnixNano())),
-		Label:  Label,
+		Random:                 rand.New(rand.NewSource(time.Now().UnixNano())),
+		Label:                  Label,
+		NextGameRemainingTicks: 40,
 
 		Presences: make(map[string]runtime.Presence, 4),
 	}, tickRate, string(labelJSON)
@@ -87,7 +85,7 @@ func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logg
 	}
 
 	// Check if match is full.
-	if len(s.Presences)+s.JoinsInProgress >= 3 {
+	if len(s.Presences)+s.JoinsInProgress >= MAX_PLAYER_NUM {
 		return s, false, "match full"
 	}
 	// New player attempting to connect.
@@ -104,11 +102,13 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 	for _, presence := range Presences {
 		s.EmptyTicks = 0
 		s.Presences[presence.GetUserId()] = presence
+
 		s.JoinsInProgress--
 
 		// Check if we must send a message to this user to update them on the current game state.
 		var opCode api.OpCode
 		var msg proto.Message
+		logger.Info("有人加入了房间username:%v", s.Presences[presence.GetUsername()])
 
 		// There's no game in progress but we still have a completed game that the user was part of.
 		// They likely disconnected before the game ended, and have since forfeited because they took too long to return.
@@ -125,7 +125,7 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 
 		// Send a message to the user that just joined, if one is needed based on the logic above.
 		if msg != nil {
-			buf, err := m.marshaler.Marshal(msg)
+			buf, err := m.service.Marshaler.Marshal(msg)
 			if err != nil {
 				logger.Error("error encoding message: %v", err)
 			} else {
@@ -135,8 +135,9 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 	}
 
 	// Check if match was open to new players, but should now be closed.
-	if len(s.Presences) >= 3 && s.Label.Open != 0 {
+	if len(s.Presences) >= MAX_PLAYER_NUM && s.Label.Open != 0 {
 		s.Label.Open = 0
+		logger.Info("人数足够，房间已关闭，准备开始比赛，开始倒计时")
 		if labelJSON, err := json.Marshal(s.Label); err != nil {
 			logger.Error("error encoding Label: %v", err)
 		} else {
@@ -184,8 +185,9 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 		}
 
 		// Check if we need to update the Label so the match now advertises itself as open to join.
-		if len(s.Presences) < 2 && s.Label.Open != 1 {
+		if len(s.Presences) < MAX_PLAYER_NUM && s.Label.Open != 1 {
 			s.Label.Open = 1
+			logger.Info("人数不足，房间已开启，等待他人加入")
 			if labelJSON, err := json.Marshal(s.Label); err != nil {
 				logger.Error("error encoding Label: %v", err)
 			} else {
@@ -196,33 +198,31 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 		}
 
 		// Check if we have enough players to start a game.
-		if len(s.Presences) < 2 {
+		if len(s.Presences) < MAX_PLAYER_NUM {
+			logger.Info("人数不足，等待他人加入")
+			return s
+		}
+		// Check if enough time has passed since the last game.
+		if s.NextGameRemainingTicks > 0 {
+			logger.Info("倒计时:%v", s.NextGameRemainingTicks/tickRate)
+			s.NextGameRemainingTicks--
+			buf, err := m.service.Marshaler.Marshal(&api.ReadyToStart{
+				NextGameStart: t.Add(time.Duration(s.NextGameRemainingTicks/tickRate) * time.Second).Unix(),
+			})
+			if err != nil {
+				logger.Error("error encoding message: %v", err)
+			} else {
+				_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_READY_START), buf, nil, nil, true)
+			}
 			return s
 		}
 
-		// Check if enough time has passed since the last game.
-		// if s.nextGameRemainingTicks > 0 {
-		// 	s.nextGameRemainingTicks--
-		// 	return s
-		// }
-
 		// We can start a game! Set up the game state and assign the marks to each player.
 		s.Playing = true
+		logger.Info("开始游戏")
 		//初始化游戏
-		//todo
+		m.service.InitMatch(ctx, dispatcher, logger, s, tickRate)
 
-		// Notify the players a new game has started.
-		buf, err := m.marshaler.Marshal(&api.Start{
-			// Board:    s.board,
-			// Marks:    s.marks,
-			// Mark:     s.mark,
-			Deadline: t.Add(time.Duration(s.DeadlineRemainingTicks/tickRate) * time.Second).Unix(),
-		})
-		if err != nil {
-			logger.Error("error encoding message: %v", err)
-		} else {
-			_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_START), buf, nil, nil, true)
-		}
 		return s
 	}
 
@@ -233,7 +233,6 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 			m.service.BeforeAssassin(ctx, dispatcher, s, message)
 			log.Println("this is Assassin")
 		case api.OpCode_OPCODE_DENY_KILL:
-
 			log.Println("this is Assassin")
 		case api.OpCode_OPCODE_DISCARD:
 			log.Println("this is Assassin")
@@ -249,105 +248,33 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 			log.Println("this is Assassin")
 		case api.OpCode_OPCODE_DRAW_THREE_COINS:
 			log.Println("this is Assassin")
-		case api.OpCode_OPCODE_STEAL_CARD:
+		case api.OpCode_OPCODE_STEAL_COINS:
 			log.Println("this is Assassin")
-
 		case api.OpCode_OPCODE_QUESTION:
 			log.Println("this is Assassin")
 		case api.OpCode_OPCODE_DONE:
 			log.Println("this is Assassin")
-
-		// case api.OpCode_OPCODE_MOVE:
-		// 	mark := s.marks[message.GetUserId()]
-		// 	if s.mark != mark {
-		// 		// It is not this player's turn.
-		// 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, []runtime.Presence{message}, nil, true)
-		// 		continue
-		// 	}
-
-		// 	msg := &api.Move{}
-		// 	err := m.unmarshaler.Unmarshal(message.GetData(), msg)
-		// 	if err != nil {
-		// 		// Client sent bad data.
-		// 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, []runtime.Presence{message}, nil, true)
-		// 		continue
-		// 	}
-		// 	if msg.Position < 0 || msg.Position > 8 || s.board[msg.Position] != api.Mark_MARK_UNSPECIFIED {
-		// 		// Client sent a position outside the board, or one that has already been played.
-		// 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, []runtime.Presence{message}, nil, true)
-		// 		continue
-		// 	}
-
-		// 	// Update the game state.
-		// 	s.board[msg.Position] = mark
-		// 	switch mark {
-		// 	case api.Mark_MARK_X:
-		// 		s.mark = api.Mark_MARK_O
-		// 	case api.Mark_MARK_O:
-		// 		s.mark = api.Mark_MARK_X
-		// 	}
-		// 	s.DeadlineRemainingTicks = calculateDeadlineTicks(s.Label)
-
-		// 	// Check if game is over through a winning move.
-		// //winCheck:
-		// 	for _, winningPosition := range winningPositions {
-		// 		for _, position := range winningPosition {
-		// 			if s.board[position] != mark {
-		// 				continue winCheck
-		// 			}
-		// 		}
-
-		// 		// Update state to reflect the winner, and schedule the next game.
-		// 		s.winner = mark
-		// 		s.winnerPositions = winningPosition
-		// 		s.Playing = false
-		// 		s.DeadlineRemainingTicks = 0
-		// 		s.nextGameRemainingTicks = delayBetweenGamesSec * tickRate
-		// 	}
-		// 	// Check if game is over because no more moves are possible.
-		// 	tie := true
-		// 	for _, mark := range s.board {
-		// 		if mark == api.Mark_MARK_UNSPECIFIED {
-		// 			tie = false
-		// 			break
-		// 		}
-		// 	}
-		// 	if tie {
-		// 		// Update state to reflect the tie, and schedule the next game.
-		// 		s.Playing = false
-		// 		s.DeadlineRemainingTicks = 0
-		// 		s.nextGameRemainingTicks = delayBetweenGamesSec * tickRate
-		// 	}
-
-		// 	var opCode api.OpCode
-		// 	var outgoingMsg proto.Message
-		// 	if s.Playing {
-		// 		opCode = api.OpCode_OPCODE_UPDATE
-		// 		outgoingMsg = &api.Update{
-		// 			Board:    s.board,
-		// 			Mark:     s.mark,
-		// 			Deadline: t.Add(time.Duration(s.DeadlineRemainingTicks/tickRate) * time.Second).Unix(),
-		// 		}
-		// 	} else {
-		// 		opCode = api.OpCode_OPCODE_DONE
-		// 		outgoingMsg = &api.Done{
-		// 			Board:           s.board,
-		// 			Winner:          s.winner,
-		// 			WinnerPositions: s.winnerPositions,
-		// 			NextGameStart:   t.Add(time.Duration(s.nextGameRemainingTicks/tickRate) * time.Second).Unix(),
-		// 		}
-		// 	}
-
-		// 	buf, err := m.marshaler.Marshal(outgoingMsg)
-		// 	if err != nil {
-		// 		logger.Error("error encoding message: %v", err)
-		// 	} else {
-		// 		_ = dispatcher.BroadcastMessage(int64(opCode), buf, nil, nil, true)
-		// 	}
 		default:
 			// No other opcodes are expected from the client, so automatically treat it as an error.
 			_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_DONE), nil, []runtime.Presence{message}, nil, true)
 		}
+	}
+	var opCode api.OpCode
+	var outgoingMsg proto.Message
+	if s.Playing {
+		opCode = api.OpCode_OPCODE_UPDATE
+		outgoingMsg = &api.Update{
+			PlayerInfos:     s.PlayerInfos,
+			CurrentPlayerId: s.CurrentPlayerID,
+			Message:         "update",
+			Deadline:        t.Add(time.Duration(s.DeadlineRemainingTicks/tickRate) * time.Second).Unix(),
+		}
+	}
+	buf, err := m.service.Marshaler.Marshal(outgoingMsg)
+	if err != nil {
+		logger.Error("error encoding message: %v", err)
+	} else {
+		_ = dispatcher.BroadcastMessage(int64(opCode), buf, nil, nil, true)
 	}
 
 	// Keep track of the time remaining for the player to submit their move. Idle players forfeit.
@@ -355,10 +282,10 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 		s.DeadlineRemainingTicks--
 		if s.DeadlineRemainingTicks <= 0 {
 			// The player has run out of time to submit their move.
-			log.Println("DeadlineRemainingTicks")
+			s.DeadlineRemainingTicks = int64(50)
+			log.Println("回合到了")
 		}
 	}
-
 	return s
 }
 
