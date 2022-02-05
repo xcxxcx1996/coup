@@ -1,3 +1,8 @@
 {
-  "extends": ["next", "plugin:@typescript-eslint/recommended", "prettier"]
+  "plugins": ["react-hooks"],
+  "extends": ["next", "plugin:@typescript-eslint/recommended", "prettier"],
+  "rules": {
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn"
+  }
 }

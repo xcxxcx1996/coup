@@ -1,6 +1,7 @@
-import { ROLES, rolesMap } from "../../constants";
 import { Box } from "@mui/material";
 import Carousel from "react-material-ui-carousel";
+import { useContext } from "react";
+import { gameContext } from "../../contexts/gameContext";
 
 export interface IUser {
     name: string;
@@ -15,24 +16,6 @@ export interface UserCarouselProps {
 export interface UserInfoProps {
     user: IUser;
 }
-
-const users: IUser[] = [
-    {
-        name: "leo",
-        coins: 2,
-        roles: [rolesMap[ROLES.ASSASSIN], rolesMap[ROLES.QUEEN]],
-    },
-    {
-        name: "john",
-        coins: 2,
-        roles: [rolesMap[ROLES.AMBASSADOR], rolesMap[ROLES.CAPTAIN]],
-    },
-    {
-        name: "jack",
-        coins: 2,
-        roles: [rolesMap[ROLES.LORD], rolesMap[ROLES.ASSASSIN]],
-    },
-];
 
 export function UserInfo(props: UserInfoProps) {
     const { user } = props;
@@ -57,6 +40,7 @@ export function UserInfo(props: UserInfoProps) {
 }
 
 export function UserCarousel() {
+    const { users } = useContext(gameContext);
     return (
         <Box
             sx={{
