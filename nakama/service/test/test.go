@@ -2,23 +2,25 @@ package main
 
 import (
 	"log"
-	"time"
+	"unsafe"
 
 	"github.com/xcxcx1996/coup/api"
-	"github.com/xcxcx1996/coup/model"
-	"github.com/xcxcx1996/coup/service"
+	"github.com/xcxcx1996/coup/global"
 )
 
+func BytesToStringFast(b []byte) string {
+	return *(*string)(unsafe.Pointer(&b))
+}
 func main() {
-	tickRate := int64(10)
-	s := &model.MatchState{
-		NextGameRemainingTicks: 40,
-	}
-	service := service.New()
-	t := time.Now().UTC()
-	buf, err := service.Marshaler.Marshal(&api.ReadyToStart{
-		NextGameStart: t.Add(time.Duration(s.NextGameRemainingTicks/tickRate) * time.Second).Unix(),
+	// tickRate := int64(10)
+	global.Init()
+	// t := time.Now().UTC()
+	buf, _ := global.Marshaler.Marshal(&api.Question{
+		IsQuestion: false,
 	})
 	log.Printf("buf:%v", buf)
-	log.Printf("err:%v", err)
+	log.Printf("string:%v", BytesToStringFast(buf))
+	var a = api.Question{}
+	global.Unmarshaler.Unmarshal(buf, &a)
+	log.Printf("struct:%v", a)
 }

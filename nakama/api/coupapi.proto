@@ -23,31 +23,36 @@ option go_package = "./api";
 
 // The marks available in the game.
 enum Role {
+    //UNDEFINED
+    UNROLE=0;
     // DIPLOMAT 0
-    DIPLOMAT = 0;
+    DIPLOMAT = 1;
     // QUEEN 1
-    QUEEN = 1;
+    QUEEN = 2;
     // CAPTAIN 2
-    CAPTAIN = 2;
+    CAPTAIN = 3;
     // ASSASSIN 3
-    ASSASSIN=3;
+    ASSASSIN=4;
     // BARON 4
-    BARON=4;
+    BARON=5;
 }
 
 
 enum State{
-    // 什么都做不了
-    IDLE=0;
+    //undefined
+    UNDEFINED=0;
+    //什么都做不了
+    IDLE=1;
     // 自己回合开始，可以拿1，2，3块钱，和施放技能
-    START=1;
+    START=2;
     // 质疑
-    QUESTION=2;
+    QUESTION=3;
     // 保护自己，包括防偷牌，看牌，和刺杀
-    DENY_MONEY=3;
-    DENY_STEAL=4;
-    DENY_ASSASSIN=5;
-    DISCARD=6;
+    DENY_MONEY=4;
+    DENY_STEAL=5;
+    DENY_ASSASSIN=6;
+    DISCARD=7;
+    CHOOSE_CARD=8;
     // DENY_CHECK=5;
 }
 
@@ -57,8 +62,8 @@ enum OpCode {
     OPCODE_UNCODE = 0;
     // 开始游戏
     OPCODE_START=1;
-    // 玩家抽卡
-    OPCODE_DRAW_CARD=2;
+    // deny_assassian结束后的flag
+    OPCODE_COMPLETE_DENY_KILL=2;
     // 玩家弃置卡牌
     OPCODE_DISCARD=3;
     // 拿钱
@@ -80,16 +85,17 @@ enum OpCode {
     OPCODE_DENY_STEAL=11;
     //防止刺杀
     OPCODE_DENY_KILL=12;
-    // 阻止拿3块钱
+    // 阻止拿2块钱
     OPCODE_DENY_MONEY=13;
-
     //政变
     OPCODE_COUP=14;
-    
     // OPCODE_DRAW_THREE_COINS=10;
     OPCODE_READY_START=15;
     OPCODE_UPDATE=16;
     OPCODE_REJECTED=17;
+    OPCODE_CHOOSE_CARD=18;
+    OPCODE_INFO=19;
+    OPCODE_TICK=20;
 }
 
 message PlayerInfo{
@@ -120,6 +126,15 @@ message Start {
     string message=4;
 }
 
+// 计时
+message Tick{
+    int64 deadline = 1;
+}
+// 历史信息
+message Info {
+    string info=1;
+}
+
 // A game state update sent by the server to clients.
 message Update {
     // The assignments of the marks to players for this round.
@@ -128,75 +143,64 @@ message Update {
     string current_player_id  = 2;
     string question_player_id=3;
     // The deadline time by which the player must submit their move, or forfeit.
-    int64 deadline = 4;
     //比赛信息
     string message=5;
 }
 
-// Complete game round with winner announcement.
+// todo 比赛结束 
 message Done {
-    // // The final state of the board.
-    // repeated Mark board = 1;
-    // // The winner of the game, if any. Unspecified if it's a draw.
-    // Mark winner = 2;
-    // // Winner board positions, if any. Used to display the row, column, or diagonal that won the game.
-    // // May be empty if it's a draw or the winner is by forfeit.
-    // repeated int32 winner_positions = 3;
-    // // Next round start time.
-    // int64 next_game_start = 4;
 }
+// 准备开始
 message ReadyToStart{
     int64 next_game_start = 1;
 }
-
+// 是否质询
 message Question{
     bool is_question=1;
 }
+message Deny{
+    bool is_deny=1;
+}
 
+// 获取金币 1块？2块
 message GetCoin{
     int32 coins=2;
 }
-
-
+// 弃牌
 message Discard{
     string player_id=1;
     string card_id=2;
 }
-
+// 偷牌 被偷的玩家id
 message StealCoins{
+    // 指定玩家id
     string player_id=1;
 }
-message ChangeSingleCard{
-    string player_id=1;
-    string card_id=2;
-    
+// 换牌 cards []string
+message ChangeCard{
+    repeated string cards=1; 
 }
-
-message DenyAssassin{
-    bool is_deny=1; 
-}
-
-message DenyMoney{
-    bool is_deny=1;
-}
-
-message DenySteal{
-    bool is_deny=1;
-}
-
-
-
+// 刺杀 被刺杀的人的id
 message Assassin{
+    // 指定玩家id
     string player_id=1;
-    //Card
-    string card_id=2;
+
 }
 
+// 政变 政变目标的id
 message Coup{
+    // 指定玩家id
     string player_id=1;
-    //Card
-    string card_id=2;
 }
+// 换牌的参数，发送到客户端的参数
+message ChangeCardRequest{
+    repeated Card cards=1; 
+}
+// 换牌回应，选完牌，选的牌的id
+message ChangeCardResponse{
+    repeated string cards=1; 
+}
+
 // Payload for an RPC request to find a match.
 message RpcFindMatchRequest {
     // // User can choose a fast or normal speed match.

@@ -3,11 +3,11 @@ package service
 import (
 	"context"
 	"math/rand"
-	"time"
 
 	// "github.com/google/uuid"
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
+	"github.com/xcxcx1996/coup/global"
 	"github.com/xcxcx1996/coup/model"
 )
 
@@ -19,20 +19,19 @@ func (serv *MatchService) InitMatch(ctx context.Context, dispatcher runtime.Matc
 	logger.Info("初始化卡牌池")
 	//
 	initPlayer(s)
-	logger.Info("初始化角色")
+	logger.Info("初始化角色: %v", s.PlayerInfos)
 	//
 	s.DeadlineRemainingTicks = 50
 
-	t := time.Now().UTC()
-	buf, err := serv.Marshaler.Marshal(&api.Start{
+	buf, err := global.Marshaler.Marshal(&api.Start{
 		PlayerInfos:     s.PlayerInfos,
 		CurrentPlayerId: s.CurrentPlayerID,
 		Message:         s.Message,
-		Deadline:        t.Add(time.Duration(s.DeadlineRemainingTicks/tickRate) * time.Second).Unix(),
+		Deadline:        s.DeadlineRemainingTicks / tickRate,
 	})
 	if err != nil {
-	} else {
 		logger.Error("error encoding message: %v", err)
+	} else {
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_START), buf, nil, nil, true)
 	}
 	return s
@@ -51,17 +50,17 @@ func initPlayer(state *model.MatchState) {
 		state.PlayerSequence = append(state.PlayerSequence, userID)
 		state.Deck = append([]*api.Card{}, state.Deck[2:]...)
 	}
-	sufferPlayer(state.PlayerSequence)
+	state.SufferPlayer()
 	if len(state.PlayerSequence) > 0 {
 		state.CurrentPlayerID = state.PlayerSequence[0]
-
+		state.PlayerInfos[state.CurrentPlayerID].State = api.State_START
 	}
 }
 
 func initDeck(state *model.MatchState) {
 	var deck []*api.Card
 	for i := 0; i < 3; i++ {
-		for i := 0; i < 5; i++ {
+		for i := 1; i < 6; i++ {
 			card := &api.Card{
 				Id:   getRandomString(),
 				Role: int2Role(i),
@@ -69,12 +68,12 @@ func initDeck(state *model.MatchState) {
 			deck = append(deck, card)
 		}
 	}
-	sufferCard(deck)
 	state.Deck = deck
+	state.SufferDeck()
 }
 
 func int2Role(i int) api.Role {
-	switch i {
+	switch i - 1 {
 	case 0:
 		return api.Role_DIPLOMAT
 	case 1:
@@ -87,15 +86,6 @@ func int2Role(i int) api.Role {
 		return api.Role_BARON
 	}
 	return api.Role_DIPLOMAT
-}
-
-func sufferCard(deck []*api.Card) {
-	rand.Seed(time.Now().UnixNano())
-	rand.Shuffle(len(deck), func(i, j int) { deck[i], deck[j] = deck[j], deck[i] })
-}
-func sufferPlayer(deck []string) {
-	rand.Seed(time.Now().UnixNano())
-	rand.Shuffle(len(deck), func(i, j int) { deck[i], deck[j] = deck[j], deck[i] })
 }
 
 func getRandomString() string {
