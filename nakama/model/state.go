@@ -44,6 +44,7 @@ type MatchState struct {
 	// Ticks until they must submit their move.
 	NextGameRemainingTicks int64
 	DeadlineRemainingTicks int64
+	MaxDeadlineTicks       int64
 	Message                string
 	// The winner of the current game.
 	// winner runtime.Presence
@@ -244,4 +245,8 @@ func (s *MatchState) EliminatePlayer(playerID string) error {
 		}
 	}
 	return errors.New("找不到该角色")
+}
+
+func (s *MatchState) ResetDeadLine() {
+	s.DeadlineRemainingTicks = s.MaxDeadlineTicks
 }

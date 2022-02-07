@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/heroiclabs/nakama-common/runtime"
@@ -13,14 +12,13 @@ import (
 type DrawCoin struct {
 	message runtime.MatchData
 	coins   int32
-	IsDeny  bool
 }
 
 func (a DrawCoin) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) {
 
 	msg := &api.GetCoin{}
 	myTurn := message.GetUserId() == state.CurrentPlayerID
-
+	log.Println("messagegetuserid", message.GetUserId())
 	err := global.Unmarshaler.Unmarshal(message.GetData(), msg)
 	if err != nil || !myTurn {
 		// Client sent bad data.
@@ -31,16 +29,22 @@ func (a DrawCoin) Start(dispatcher runtime.MatchDispatcher, message runtime.Matc
 	a.coins = msg.Coins
 	a.message = message
 	state.Actions.Push(a)
-	var buf []byte
-	// question状态
+
 	if a.coins == 2 {
-		buf, _ = global.Marshaler.Marshal(&api.Info{Info: fmt.Sprintf("%v想拿2块钱", message.GetUsername())})
 		state.EnterDenyMoney()
 	} else {
-		buf, _ = global.Marshaler.Marshal(&api.Info{Info: fmt.Sprintf("%v想拿1块钱", message.GetUsername())})
+		a.AfterDeny(dispatcher, state)
 	}
-	log.Println("拿钱")
-	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+	// var buf []byte
+	// // question状态
+	// if a.coins == 2 {
+	// 	buf, _ = global.Marshaler.Marshal(&api.Info{Info: fmt.Sprintf("%v想拿2块钱", state.CurrentPlayerID)})
+	// 	state.EnterDenyMoney()
+	// } else {
+	// 	buf, _ = global.Marshaler.Marshal(&api.Info{Info: fmt.Sprintf("%v想拿1块钱", state.CurrentPlayerID)})
+	// }
+	// log.Printf("拿钱:%v", buf)
+	// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
 }
 
 // 正常拿钱没有人会质疑，只有公爵阻止,所以不用写
@@ -50,10 +54,12 @@ func (a DrawCoin) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model
 
 // 阻止失败，开始拿钱
 func (a DrawCoin) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
+	state.Actions.Pop()
 	state.PlayerInfos[state.CurrentPlayerID].Coins += int64(a.coins)
-	info := fmt.Sprintf("%v成功拿了钱", a.message.GetUsername())
-	buf, _ := global.Marshaler.Marshal(&api.Info{Info: info})
-	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+	// info := fmt.Sprintf("%v成功拿了钱", a.message.GetUsername())
+	// buf, _ := global.Marshaler.Marshal(&api.Info{Info: info})
+	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), nil, nil, nil, true)
+	state.NextTurn()
 }
 
 // 行动被阻止

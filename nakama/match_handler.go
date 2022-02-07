@@ -21,12 +21,12 @@ const (
 	moduleName = "coup"
 
 	tickRate       = 5
-	MAX_PLAYER_NUM = 1
+	MAX_PLAYER_NUM = 2
 	maxEmptySec    = 30
 	// delayBetweenGamesSec = 5
 	turnTimeFastSec   = 10
 	nextStartSec      = 10
-	turnTimeNormalSec = 20
+	turnTimeNormalSec = 10
 )
 
 // Compile-time check to make sure all required functions are implemented.
@@ -217,8 +217,7 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 		s.Playing = true
 		logger.Info("开始游戏")
 		//初始化游戏
-		m.service.InitMatch(ctx, dispatcher, logger, s, tickRate)
-
+		m.service.StartMatch(dispatcher, logger, s, tickRate, turnTimeNormalSec)
 		return s
 	}
 
@@ -237,7 +236,6 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 		}
 		if s.DeadlineRemainingTicks <= 0 {
 			// The player has run out of time to submit their move.
-			s.DeadlineRemainingTicks = int64(50)
 			log.Println("回合到了")
 			serv.DefaultAction(dispatcher, s)
 		}

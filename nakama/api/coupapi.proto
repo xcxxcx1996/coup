@@ -72,7 +72,6 @@ enum OpCode {
     OPCODE_QUESTION=5;
     // 比赛结束
     OPCODE_DONE = 6;
-    // **发动技能**
     //偷牌
     OPCODE_STEAL_COINS = 7;
     //换牌
@@ -155,7 +154,6 @@ message Update {
     string message=5;
 }
 
-// todo 比赛结束 
 message Done {
     PlayerInfo winner=1; 
 }

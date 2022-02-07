@@ -12,7 +12,6 @@ import (
 type Assassin struct {
 	Assassinor   string
 	Assassinated string
-	IsDeny       bool
 }
 
 func (a Assassin) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) {
@@ -35,7 +34,6 @@ func (a Assassin) Start(dispatcher runtime.MatchDispatcher, message runtime.Matc
 	info := fmt.Sprintf("%v 对 %v 刺杀", message.GetUsername(), state.GetPlayerNameByID(a.Assassinated))
 	buf, _ := global.Marshaler.Marshal(&api.Info{Info: info})
 	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
-
 	state.EnterQuestion()
 }
 

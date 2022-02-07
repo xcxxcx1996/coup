@@ -1,49 +1,30 @@
-package service
+package model
 
 import (
-	"context"
+	"log"
 	"math/rand"
 
-	// "github.com/google/uuid"
-	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
-	"github.com/xcxcx1996/coup/global"
-	"github.com/xcxcx1996/coup/model"
 )
 
-func (serv *MatchService) InitMatch(ctx context.Context, dispatcher runtime.MatchDispatcher, logger runtime.Logger, s *model.MatchState, tickRate int64) *model.MatchState {
-	// Notify the players a new game has started.
-	logger.Info("开始初始化")
-	//
-	initDeck(s)
-	logger.Info("初始化卡牌池")
-	//
-	initPlayer(s)
-	logger.Info("初始化角色: %v", s.PlayerInfos)
-	//
-	s.DeadlineRemainingTicks = 50
-	s.State = api.State_START
-	buf, err := global.Marshaler.Marshal(&api.Start{
-		PlayerInfos:     s.PlayerInfos,
-		CurrentPlayerId: s.CurrentPlayerID,
-		Message:         s.Message,
-		Deadline:        s.DeadlineRemainingTicks / tickRate,
-	})
-	if err != nil {
-		logger.Error("error encoding message: %v", err)
-	} else {
-		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_START), buf, nil, nil, true)
-	}
-	return s
+func (s *MatchState) Init(deadlineticks int64) {
+	//设置时间
+	s.DeadlineRemainingTicks = deadlineticks
+	s.MaxDeadlineTicks = deadlineticks
+	s.initDeck()
+	s.initPlayer()
+	log.Printf("state:%v", s.PlayerInfos)
+	log.Printf("state:%v", s.PlayerInfos)
+	log.Printf("state:%v", s.PlayerInfos)
 }
 
-func initPlayer(state *model.MatchState) {
+func (state *MatchState) initPlayer() {
 	state.PlayerInfos = make(map[string]*api.PlayerInfo, 4)
 	for userID := range state.Presences {
 		var playerinfo = &api.PlayerInfo{
 			State: api.State_IDLE,
 			Id:    userID,
-			Coins: 3,
+			Coins: 2,
 			Cards: state.Deck[:2],
 			Name:  state.Presences[userID].GetUsername(),
 		}
@@ -58,7 +39,7 @@ func initPlayer(state *model.MatchState) {
 	}
 }
 
-func initDeck(state *model.MatchState) {
+func (state *MatchState) initDeck() {
 	var deck []*api.Card
 	for i := 0; i < 3; i++ {
 		for i := 1; i < 6; i++ {

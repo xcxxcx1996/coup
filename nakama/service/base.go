@@ -7,10 +7,15 @@ import (
 	"github.com/xcxcx1996/coup/api"
 	"github.com/xcxcx1996/coup/global"
 	"github.com/xcxcx1996/coup/model"
+	"github.com/xcxcx1996/coup/utils"
 	"google.golang.org/protobuf/proto"
 )
 
 type MatchService struct{}
+
+func New() (s *MatchService) {
+	return &MatchService{}
+}
 
 func (serv *MatchService) Dispatch(message runtime.MatchData, state *model.MatchState, dispatcher runtime.MatchDispatcher) {
 	switch message.GetOpCode() {
@@ -48,7 +53,7 @@ func (serv *MatchService) Dispatch(message runtime.MatchData, state *model.Match
 	case int64(api.OpCode_OPCODE_DENY_STEAL):
 		action := DenySteal{}
 		action.Start(dispatcher, message, state)
-	// 普通玩家拿牌
+	// 普通玩家拿钱
 	case int64(api.OpCode_OPCODE_DRAW_COINS):
 		action := DrawCoin{}
 		action.Start(dispatcher, message, state)
@@ -60,9 +65,9 @@ func (serv *MatchService) Dispatch(message runtime.MatchData, state *model.Match
 		serv.Questioning(dispatcher, message, state)
 	default:
 	}
+	log.Printf("更新状态:%v", state.PlayerInfos)
 	var opCode api.OpCode
 	var outgoingMsg proto.Message
-
 	opCode = api.OpCode_OPCODE_UPDATE
 	outgoingMsg = &api.Update{
 		PlayerInfos:     state.PlayerInfos,
@@ -75,6 +80,7 @@ func (serv *MatchService) Dispatch(message runtime.MatchData, state *model.Match
 	} else {
 		_ = dispatcher.BroadcastMessage(int64(opCode), buf, nil, nil, true)
 	}
+	state.ResetDeadLine()
 }
 
 // 默认行为
@@ -104,6 +110,22 @@ func (serv *MatchService) DefaultAction(dispatcher runtime.MatchDispatcher, stat
 	serv.Dispatch(message, state, dispatcher)
 }
 
-func New() (s *MatchService) {
-	return &MatchService{}
+func (serv *MatchService) StartMatch(dispatcher runtime.MatchDispatcher, logger runtime.Logger, s *model.MatchState, tickRate int64, turnTime int64) *model.MatchState {
+	// Notify the players a new game has started.
+	s.Init(turnTime * tickRate)
+	s.State = api.State_START
+	buf, err := global.Marshaler.Marshal(&api.Start{
+		PlayerInfos:     s.PlayerInfos,
+		CurrentPlayerId: s.CurrentPlayerID,
+		Message:         s.Message,
+		Deadline:        s.DeadlineRemainingTicks / tickRate,
+	})
+
+	log.Printf("data:%v", utils.Bytes2String(buf))
+	if err != nil {
+		logger.Error("error encoding message: %v", err)
+	} else {
+		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_START), buf, nil, nil, true)
+	}
+	return s
 }
