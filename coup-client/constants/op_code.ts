@@ -17,4 +17,8 @@ export enum OP_CODE {
     READY_START = 15,
     UPDATE = 16,
     REJECTED = 17,
+    CHOOSE_CARD = 18,
+    INFO = 19,
+    TICK = 20,
+    DEAD = 21,
 }

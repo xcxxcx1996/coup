@@ -4,6 +4,7 @@ import { useContext } from "react";
 import { gameContext } from "../../contexts/gameContext";
 
 export interface IUser {
+    id: string;
     name: string;
     coins: number;
     roles: string[];
@@ -54,7 +55,7 @@ export function UserCarousel() {
                 animation={"slide"}
             >
                 {users.map((user) => (
-                    <UserInfo key={user.name} user={user} />
+                    <UserInfo key={user.id} user={user} />
                 ))}
             </Carousel>
         </Box>

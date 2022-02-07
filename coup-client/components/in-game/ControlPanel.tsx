@@ -9,6 +9,8 @@ import {
 import React, { useContext, useState } from "react";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { gameContext } from "../../contexts/gameContext";
+import { nakamaClient } from "../../utils/nakama";
+import { rolesMap } from "../../constants";
 
 export interface IMenuItem {
     text: string;
@@ -20,10 +22,17 @@ export interface MenuButtonProps {
     items: IMenuItem[];
     btnWidth: number;
     menuItemWidth?: number;
+    disabled?: boolean;
 }
 
 const MenuButton = (props: MenuButtonProps) => {
-    const { text, items, btnWidth, menuItemWidth = 140 } = props;
+    const {
+        text,
+        items,
+        btnWidth,
+        menuItemWidth = 140,
+        disabled = false,
+    } = props;
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -40,6 +49,7 @@ const MenuButton = (props: MenuButtonProps) => {
                 onClick={handleClick}
                 endIcon={<KeyboardArrowDownIcon />}
                 disableElevation={true}
+                disabled={disabled}
             >
                 {text}
             </Button>
@@ -112,21 +122,42 @@ export const AbilityDialog = (props: AbilityProps) => {
                     p: 1,
                 }}
             >
-                <AbilityBtn text="女王（防刺杀）" onClick={null} />
-                <AbilityBtn text="男爵（收3金币）" onClick={null} />
-                <AbilityBtn text="男爵（阻止收2金币）" onClick={null} />
+                <AbilityBtn
+                    text="女王（防刺杀）"
+                    onClick={() => nakamaClient.denyKill()}
+                />
+                <AbilityBtn
+                    text="男爵（收3金币）"
+                    onClick={() => nakamaClient.drawThreeCoins()}
+                />
+                <AbilityBtn
+                    text="男爵（阻止收2金币）"
+                    onClick={() => nakamaClient.denyMoney()}
+                />
                 <AbilityBtn text="大使（换牌）" onClick={null} />
-                <AbilityBtn text="大使（阻止偷金币）" onClick={null} />
+                <AbilityBtn
+                    text="大使（阻止偷金币）"
+                    onClick={() => nakamaClient.denySteal()}
+                />
                 <MenuButton
                     text={"队长（偷2金币）"}
-                    items={targetUsers}
+                    items={users.map((u) => ({
+                        text: u.name,
+                        onClick: () => nakamaClient.stealCoins(u.id),
+                    }))}
                     btnWidth={250}
                     menuItemWidth={250}
                 />
-                <AbilityBtn text="队长（阻止偷金币）" onClick={null} />
+                <AbilityBtn
+                    text="队长（阻止偷金币）"
+                    onClick={() => nakamaClient.denySteal()}
+                />
                 <MenuButton
                     text={"刺客（刺杀）"}
-                    items={targetUsers}
+                    items={users.map((u) => ({
+                        text: u.name,
+                        onClick: () => nakamaClient.assassin(u.id),
+                    }))}
                     btnWidth={250}
                     menuItemWidth={250}
                 />
@@ -137,6 +168,8 @@ export const AbilityDialog = (props: AbilityProps) => {
 
 export const ControlPanel = () => {
     const [open, setOpen] = useState(false);
+    const { users, shouldDiscard, cards } = useContext(gameContext);
+    console.log("-> shouldDiscard", shouldDiscard);
     const handleClose = () => {
         setOpen(false);
     };
@@ -155,8 +188,8 @@ export const ControlPanel = () => {
         >
             <MenuButton
                 items={[
-                    { text: "1金币", onClick: () => {} },
-                    { text: "2金币", onClick: () => {} },
+                    { text: "1金币", onClick: () => nakamaClient.drawCoins(1) },
+                    { text: "2金币", onClick: () => nakamaClient.drawCoins(2) },
                 ]}
                 text="获取金币"
                 btnWidth={140}
@@ -170,15 +203,35 @@ export const ControlPanel = () => {
             </Button>
             <MenuButton
                 items={[
-                    { text: "质疑", onClick: () => {} },
-                    { text: "不质疑", onClick: () => {} },
+                    {
+                        text: "质疑",
+                        onClick: () => nakamaClient.question(true),
+                    },
+                    {
+                        text: "不质疑",
+                        onClick: () => nakamaClient.question(false),
+                    },
                 ]}
                 text="质疑/不质疑"
                 btnWidth={140}
             />
-            <Button sx={{ width: "140px", m: 1 }} variant="contained">
-                政变
-            </Button>
+            <MenuButton
+                btnWidth={140}
+                text={"政变"}
+                items={users.map((u) => ({
+                    text: u.name,
+                    onClick: () => nakamaClient.coup(u.id),
+                }))}
+            />
+            <MenuButton
+                btnWidth={140}
+                text={"弃牌"}
+                disabled={!shouldDiscard}
+                items={cards.map((c) => ({
+                    text: rolesMap[c.role],
+                    onClick: () => nakamaClient.discardCard(c.id),
+                }))}
+            />
             <AbilityDialog open={open} handleClose={handleClose} />
         </Box>
     );

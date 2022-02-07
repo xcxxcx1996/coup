@@ -18,6 +18,8 @@ export interface GameContext {
     currentPlayer: string;
     timeLeft: number;
     shouldReconnect: boolean;
+    cards: ICard[];
+    shouldDiscard: boolean;
 }
 
 export const gameContext = createContext<GameContext>({
@@ -26,40 +28,58 @@ export const gameContext = createContext<GameContext>({
     currentPlayer: null,
     timeLeft: null,
     shouldReconnect: null,
+    cards: null,
+    shouldDiscard: false,
 });
 
 export interface PlayerInfo {
     [id: string]: {
         id: string;
         coins: number;
-        cards: { id: string; role: number }[];
+        cards: ICard[];
+        name: string;
     };
 }
 
+export interface ICard {
+    id: string;
+    role: number;
+}
+
+export const transformPlayerInfos = (playerInfo: PlayerInfo) => {
+    return Object.values(playerInfo).map((item) => ({
+        id: item.id,
+        name: item.name,
+        coins: item.coins,
+        roles: item.cards.map((card) => rolesMap[String(card.role)]),
+    }));
+};
+
 export const GameContextProvider: FC = ({ children }) => {
     const [users, setUsers] = useState<IUser[]>([]);
+    const [cards, setCards] = useState<ICard[]>([]);
     const [currentPlayer, setCurrentPlayer] = useState("");
     const [timeLeft, setTimeLeft] = useState(0);
     const [shouldReconnect, setShouldReconnect] = useState(false);
+    const [shouldDiscard, setShouldDiscard] = useState(false);
     useEffect(() => {
         nakamaClient.socket.onmatchdata = (matchData: MatchData) => {
-            console.log("-> matchData", matchData);
-            if (matchData.op_code === OP_CODE.UPDATE) {
-                const playerInfos: PlayerInfo = matchData.data.playerInfos;
-                const currentPlayerId = matchData.data.currentPlayerId;
-                const deadline = matchData.data.deadline;
-                const users: IUser[] = Object.values(playerInfos).map(
-                    (item) => ({
-                        name: item.id.slice(0, 5),
-                        coins: item.coins,
-                        roles: item.cards.map(
-                            (card) => rolesMap[String(card.role)]
-                        ),
-                    })
-                );
-                setUsers(users);
-                setCurrentPlayer(currentPlayerId.slice(0, 5));
-                setTimeLeft(deadline - Math.floor(Date.now() / 1000));
+            // console.log("-> matchData", matchData);
+            const playerInfos: PlayerInfo = matchData.data.playerInfos;
+            const currentPlayerId: string = matchData.data.currentPlayerId;
+            switch (matchData.op_code) {
+                case OP_CODE.START:
+                case OP_CODE.UPDATE:
+                    setUsers(transformPlayerInfos(playerInfos));
+                    setCards(playerInfos[currentPlayerId].cards);
+                    setCurrentPlayer(playerInfos[currentPlayerId].name);
+                    break;
+                case OP_CODE.TICK:
+                    setTimeLeft(matchData.data.deadline);
+                    break;
+                case OP_CODE.DISCARD_CARD:
+                    setShouldDiscard(true);
+                    break;
             }
         };
     }, []);
@@ -80,6 +100,8 @@ export const GameContextProvider: FC = ({ children }) => {
                 currentPlayer,
                 timeLeft,
                 shouldReconnect,
+                cards,
+                shouldDiscard,
             }}
         >
             {children}

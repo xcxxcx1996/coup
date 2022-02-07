@@ -91,8 +91,12 @@ class Nakama {
         await this.socket.sendMatchState(this.matchID, OP_CODE.DRAW_CARD, null);
     }
 
-    async assassin() {
-        await this.socket.sendMatchState(this.matchID, OP_CODE.ASSASSIN, null);
+    async assassin(playerId: string) {
+        await this.socket.sendMatchState(
+            this.matchID,
+            OP_CODE.ASSASSIN,
+            playerId
+        );
     }
 
     async denyKill() {
@@ -131,40 +135,44 @@ class Nakama {
         );
     }
 
-    async stealCoins() {
+    async stealCoins(playerId: string) {
         await this.socket.sendMatchState(
             this.matchID,
             OP_CODE.STEAL_COINS,
-            null
+            playerId
         );
     }
 
-    async discardCard() {
+    async discardCard(cardId: string) {
         await this.socket.sendMatchState(
             this.matchID,
             OP_CODE.DISCARD_CARD,
-            null
+            cardId
         );
     }
 
-    async drawCoins() {
+    async drawCoins(coinNum: number) {
         await this.socket.sendMatchState(
             this.matchID,
             OP_CODE.DRAW_COINS,
-            null
+            coinNum
         );
     }
 
-    async question() {
-        await this.socket.sendMatchState(this.matchID, OP_CODE.QUESTION, null);
+    async question(isQuestion: boolean) {
+        await this.socket.sendMatchState(
+            this.matchID,
+            OP_CODE.QUESTION,
+            isQuestion
+        );
     }
 
     async finishGame() {
         await this.socket.sendMatchState(this.matchID, OP_CODE.DONE, null);
     }
 
-    async coup() {
-        await this.socket.sendMatchState(this.matchID, OP_CODE.COUP, null);
+    async coup(playerId: string) {
+        await this.socket.sendMatchState(this.matchID, OP_CODE.COUP, playerId);
     }
 }
 

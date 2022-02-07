@@ -10,14 +10,14 @@ import { OP_CODE } from "../constants/op_code";
 const Home: NextPage = () => {
     const [email, setEmail] = useState("");
     const [disableEmail, setDisableEmail] = useState(false);
-    const [counter, setCounter] = useState(0);
+    const [counter, setCounter] = useState(null);
     const router = useRouter();
     const matchDataHandler = useCallback(
         (matchData: MatchData) => {
-            console.log("-> matchData111", matchData);
             if (matchData.op_code === OP_CODE.READY_START) {
                 const nextGameStart = matchData.data.nextGameStart;
-                setCounter(Math.floor(nextGameStart - Date.now() / 1000));
+                console.log("-> nextGameStart", nextGameStart);
+                setCounter(parseInt(nextGameStart));
             }
         },
         [setCounter]
@@ -38,7 +38,7 @@ const Home: NextPage = () => {
     }, []);
 
     useEffect(() => {
-        if (counter < 0) {
+        if (counter === 0) {
             router.push("in-game").then((r) => {
                 console.log("-> r", r);
             });
@@ -50,15 +50,16 @@ const Home: NextPage = () => {
     ) => {
         setEmail(e.target.value);
     };
+
     const handleClick = async () => {
         try {
             await nakamaClient.authenticate(email);
             await nakamaClient.findMatch();
-            // await router.push("in-game");
         } catch (e) {
             console.log("-> e", e);
         }
     };
+
     return (
         <div className={styles.container}>
             <main className={styles.main}>

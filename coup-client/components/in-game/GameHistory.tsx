@@ -2,9 +2,8 @@ import { Box, Button } from "@mui/material";
 import React, { useCallback, useContext } from "react";
 import { gameContext } from "../../contexts/gameContext";
 import { nakamaClient } from "../../utils/nakama";
-export interface GameHistoryProps {}
 
-export const GameHistory: React.FC<GameHistoryProps> = ({}) => {
+export const GameHistory = () => {
     const { shouldReconnect } = useContext(gameContext);
     const handleReconnect = useCallback(() => {
         nakamaClient.reconnect();
