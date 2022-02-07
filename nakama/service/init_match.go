@@ -22,7 +22,7 @@ func (serv *MatchService) InitMatch(ctx context.Context, dispatcher runtime.Matc
 	logger.Info("初始化角色: %v", s.PlayerInfos)
 	//
 	s.DeadlineRemainingTicks = 50
-
+	s.State = api.State_START
 	buf, err := global.Marshaler.Marshal(&api.Start{
 		PlayerInfos:     s.PlayerInfos,
 		CurrentPlayerId: s.CurrentPlayerID,
@@ -45,6 +45,7 @@ func initPlayer(state *model.MatchState) {
 			Id:    userID,
 			Coins: 3,
 			Cards: state.Deck[:2],
+			Name:  state.Presences[userID].GetUsername(),
 		}
 		state.PlayerInfos[userID] = playerinfo
 		state.PlayerSequence = append(state.PlayerSequence, userID)
