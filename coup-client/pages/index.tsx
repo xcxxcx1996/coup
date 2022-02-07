@@ -16,7 +16,6 @@ const Home: NextPage = () => {
         (matchData: MatchData) => {
             if (matchData.op_code === OP_CODE.READY_START) {
                 const nextGameStart = matchData.data.nextGameStart;
-                console.log("-> nextGameStart", nextGameStart);
                 setCounter(parseInt(nextGameStart));
             }
         },

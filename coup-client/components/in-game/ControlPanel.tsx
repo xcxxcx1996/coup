@@ -113,7 +113,9 @@ export const AbilityDialog = (props: AbilityProps) => {
     }));
     return (
         <Dialog onClose={handleClose} open={open}>
-            <DialogTitle sx={{ textAlign: "center" }}>选择卡牌</DialogTitle>
+            <DialogTitle sx={{ textAlign: "center" }}>
+                选择要使用的卡牌技能
+            </DialogTitle>
             <Box
                 sx={{
                     display: "flex",

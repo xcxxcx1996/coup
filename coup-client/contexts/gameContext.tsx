@@ -19,7 +19,9 @@ export interface GameContext {
     timeLeft: number;
     shouldReconnect: boolean;
     cards: ICard[];
+    setCards: Dispatch<SetStateAction<ICard[]>>;
     shouldDiscard: boolean;
+    chooseCards: ICard[];
 }
 
 export const gameContext = createContext<GameContext>({
@@ -29,7 +31,9 @@ export const gameContext = createContext<GameContext>({
     timeLeft: null,
     shouldReconnect: null,
     cards: null,
+    setCards: null,
     shouldDiscard: false,
+    chooseCards: null,
 });
 
 export interface PlayerInfo {
@@ -62,6 +66,7 @@ export const GameContextProvider: FC = ({ children }) => {
     const [timeLeft, setTimeLeft] = useState(0);
     const [shouldReconnect, setShouldReconnect] = useState(false);
     const [shouldDiscard, setShouldDiscard] = useState(false);
+    const [chooseCards, setChooseCards] = useState<ICard[]>([]);
     useEffect(() => {
         nakamaClient.socket.onmatchdata = (matchData: MatchData) => {
             console.log("-> matchData", matchData);
@@ -80,6 +85,9 @@ export const GameContextProvider: FC = ({ children }) => {
                 case OP_CODE.DISCARD_CARD:
                     setShouldDiscard(true);
                     break;
+                case OP_CODE.CHANGE_CARD:
+                    const chooseCards = matchData.data.chooseCards;
+                    setChooseCards(chooseCards);
             }
         };
     }, []);
@@ -101,7 +109,9 @@ export const GameContextProvider: FC = ({ children }) => {
                 timeLeft,
                 shouldReconnect,
                 cards,
+                setCards,
                 shouldDiscard,
+                chooseCards,
             }}
         >
             {children}

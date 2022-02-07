@@ -174,6 +174,10 @@ class Nakama {
     async coup(playerId: string) {
         await this.socket.sendMatchState(this.matchID, OP_CODE.COUP, playerId);
     }
+
+    async info() {
+        await this.socket.sendMatchState(this.matchID, OP_CODE.INFO, null);
+    }
 }
 
 export const nakamaClient = new Nakama();
