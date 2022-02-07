@@ -1,64 +1,63 @@
 package service
 
 import (
-	"context"
+	"fmt"
 
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
+	"github.com/xcxcx1996/coup/global"
 	"github.com/xcxcx1996/coup/model"
 )
 
-func (serv *MatchService) Questioning(ctx context.Context, dispatcher runtime.MatchDispatcher, state *model.MatchState, message runtime.MatchData) {
-	msg := &api.Question{}
-	err := serv.Unmarshaler.Unmarshal(message.GetData(), msg)
+func (serv *MatchService) Questioning(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) {
+	// 质疑
 
-	if err != nil {
+	msg := &api.Question{}
+
+	myTurn := message.GetUserId() == state.CurrentPlayerID
+
+	err := global.Unmarshaler.Unmarshal(message.GetData(), msg)
+	if err != nil || !myTurn {
 		// Client sent bad data.
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, nil, nil, true)
+		return
 	}
 	// 质疑的判断
-	if msg.IsQuestion{
-
-		if judgeQuestion() {
-			// 质疑成功
-			// 某些效果
+	if msg.IsQuestion {
+		card_id, valid := state.ValidQuestion()
+		buf, _ := global.Marshaler.Marshal(&api.Info{Info: fmt.Sprintf("%v 质询了该行动", message.GetUsername())})
+		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+		if valid {
+			// 质疑成功让某人弃牌
+			buf, _ := global.Marshaler.Marshal(&api.Info{Info: fmt.Sprintf("%v 质询成功", message.GetUsername())})
+			_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+			state.EnterDicardState(state.CurrentPlayerID)
+			action, _ := state.Actions.Last()
+			// 中止
+			action.Stop(dispatcher, state)
 		} else {
-			//质疑失败 丢弃某张卡牌
-			// 自己进入弃牌
+			//质疑失败 自己进入弃牌
+			buf, _ := global.Marshaler.Marshal(&api.Info{Info: fmt.Sprintf("%v 质询失败", message.GetUsername())})
+			_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+			state.EnterDicardState(message.GetUserId())
+			serv.ChangeSingleCard(card_id, state.CurrentPlayerID, state)
+			//继续他人的行动
+			action, _ := state.Actions.Last()
+			action.AfterQuestion(dispatcher, state)
+			// 然后换一张牌
 		}
-		// 质疑阶段结束
-
 		return
 	} else {
-
-	}
-
-	//
-
-	// 不质疑
-
-	// 如果下一个质疑玩家是当前玩家则退出
-
-	// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_ASSASSIN), nil, []runtime.Presence{message}, nil, true)
-}
-
-func (serv *MatchService) AfterQuestion(ctx context.Context, dispatcher runtime.MatchDispatcher, state *model.MatchState, message runtime.MatchData) {
-	//如果
-
-	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_ASSASSIN), nil, []runtime.Presence{message}, nil, true)
-
-}
-func judgeQuestion() bool {
-	return true
-}
-
-func (serv *MatchService) EnterQuestionState(playerID string, state *model.MatchState) {
-	//下一个用户进入question状态
-	for _, p := range state.PlayerInfos {
-		if playerID == p.Id {
-			p.State = api.State_QUESTION
-		} else {
-			p.State = api.State_IDLE
+		// 不质疑
+		// 如果下一个是当前行动人，则说明循环了一圈，退出Question，进入刺杀阶段
+		buf, _ := global.Marshaler.Marshal(&api.Info{Info: fmt.Sprintf("%v 不质询", message.GetUsername())})
+		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+		end := state.NextQuestionor()
+		if end {
+			action, _ := state.Actions.Last()
+			action.AfterQuestion(dispatcher, state)
+			return
 		}
+
 	}
 }

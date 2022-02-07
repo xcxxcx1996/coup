@@ -12,6 +12,7 @@ import (
 
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
+	"github.com/xcxcx1996/coup/global"
 	"github.com/xcxcx1996/coup/model"
 	"github.com/xcxcx1996/coup/service"
 )
@@ -22,9 +23,9 @@ const (
 	tickRate       = 5
 	MAX_PLAYER_NUM = 1
 	maxEmptySec    = 30
-
 	// delayBetweenGamesSec = 5
 	turnTimeFastSec   = 10
+	nextStartSec      = 10
 	turnTimeNormalSec = 20
 )
 
@@ -44,7 +45,6 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 		logger.Error("invalid match init parameter \"fast\"")
 		return nil, 0, ""
 	}
-
 	Label := &model.MatchLabel{
 		Open: 1,
 	}
@@ -61,7 +61,7 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 	return &model.MatchState{
 		Random:                 rand.New(rand.NewSource(time.Now().UnixNano())),
 		Label:                  Label,
-		NextGameRemainingTicks: 40,
+		NextGameRemainingTicks: nextStartSec * tickRate,
 
 		Presences: make(map[string]runtime.Presence, 4),
 	}, tickRate, string(labelJSON)
@@ -69,8 +69,6 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 
 func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, presence runtime.Presence, metadata map[string]string) (interface{}, bool, string) {
 	s := state.(*model.MatchState)
-
-	//
 
 	// Check if it's a user attempting to rejoin after a disconnect.
 	if presence, ok := s.Presences[presence.GetUserId()]; ok {
@@ -125,7 +123,7 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 
 		// Send a message to the user that just joined, if one is needed based on the logic above.
 		if msg != nil {
-			buf, err := m.service.Marshaler.Marshal(msg)
+			buf, err := global.Marshaler.Marshal(msg)
 			if err != nil {
 				logger.Error("error encoding message: %v", err)
 			} else {
@@ -162,7 +160,6 @@ func (m *MatchHandler) MatchLeave(ctx context.Context, logger runtime.Logger, db
 
 func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, messages []runtime.MatchData) interface{} {
 	s := state.(*model.MatchState)
-
 	//关闭房间
 	if len(s.Presences)+s.JoinsInProgress == 0 {
 		s.EmptyTicks++
@@ -206,7 +203,7 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 		if s.NextGameRemainingTicks > 0 {
 			logger.Info("倒计时:%v", s.NextGameRemainingTicks/tickRate)
 			s.NextGameRemainingTicks--
-			buf, err := m.service.Marshaler.Marshal(&api.ReadyToStart{
+			buf, err := global.Marshaler.Marshal(&api.ReadyToStart{
 				NextGameStart: t.Add(time.Duration(s.NextGameRemainingTicks/tickRate) * time.Second).Unix(),
 			})
 			if err != nil {
@@ -228,62 +225,30 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 
 	// There's a game in progress. Check for input, update match state, and send messages to clients.
 	for _, message := range messages {
-		switch api.OpCode(message.GetOpCode()) {
-		case api.OpCode_OPCODE_ASSASSIN:
-			m.service.BeforeAssassin(ctx, dispatcher, s, message)
-			log.Println("this is Assassin")
-		case api.OpCode_OPCODE_DENY_KILL:
-			log.Println("this is Assassin")
-		case api.OpCode_OPCODE_DISCARD:
-			log.Println("this is Assassin")
-		case api.OpCode_OPCODE_DENY_STEAL:
-			log.Println("this is Assassin")
-		case api.OpCode_OPCODE_COUP:
-			log.Println("this is Assassin")
-		case api.OpCode_OPCODE_DRAW_CARD:
-			log.Println("this is Assassin")
-		case api.OpCode_OPCODE_DRAW_COINS:
-			log.Println("this is Assassin")
-		case api.OpCode_OPCODE_CHANGE_CARD:
-			log.Println("this is Assassin")
-		case api.OpCode_OPCODE_DRAW_THREE_COINS:
-			log.Println("this is Assassin")
-		case api.OpCode_OPCODE_STEAL_COINS:
-			log.Println("this is Assassin")
-		case api.OpCode_OPCODE_QUESTION:
-			log.Println("this is Assassin")
-		case api.OpCode_OPCODE_DONE:
-			log.Println("this is Assassin")
-		default:
-			// No other opcodes are expected from the client, so automatically treat it as an error.
-			_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_DONE), nil, []runtime.Presence{message}, nil, true)
-		}
-	}
-	var opCode api.OpCode
-	var outgoingMsg proto.Message
-	if s.Playing {
-		opCode = api.OpCode_OPCODE_UPDATE
-		outgoingMsg = &api.Update{
-			PlayerInfos:     s.PlayerInfos,
-			CurrentPlayerId: s.CurrentPlayerID,
-			Message:         "update",
-			Deadline:        t.Add(time.Duration(s.DeadlineRemainingTicks/tickRate) * time.Second).Unix(),
-		}
-	}
-	buf, err := m.service.Marshaler.Marshal(outgoingMsg)
-	if err != nil {
-		logger.Error("error encoding message: %v", err)
-	} else {
-		_ = dispatcher.BroadcastMessage(int64(opCode), buf, nil, nil, true)
+		serv.Dispatch(message, s, dispatcher)
 	}
 
 	// Keep track of the time remaining for the player to submit their move. Idle players forfeit.
 	if s.Playing {
 		s.DeadlineRemainingTicks--
+		if s.DeadlineRemainingTicks%tickRate == 0 {
+			logger.Info("tick:%v", s.DeadlineRemainingTicks%tickRate)
+			buf, _ := global.Marshaler.Marshal(&api.Tick{Deadline: s.DeadlineRemainingTicks / tickRate})
+			_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_TICK), buf, nil, nil, true)
+		}
 		if s.DeadlineRemainingTicks <= 0 {
 			// The player has run out of time to submit their move.
 			s.DeadlineRemainingTicks = int64(50)
 			log.Println("回合到了")
+			// 跳过了
+			if s.IsQuestion {
+
+			} else if s.IsDeny {
+
+			} else {
+				s.NextTurn()
+			}
+
 		}
 	}
 	return s

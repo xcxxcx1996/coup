@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/heroiclabs/nakama-common/runtime"
+	"github.com/xcxcx1996/coup/global"
 	"github.com/xcxcx1996/coup/service"
 )
 
@@ -38,15 +39,15 @@ const (
 
 //noinspection GoUnusedExportedFunction
 func InitModule(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, initializer runtime.Initializer) error {
+	global.Init()
 	initStart := time.Now()
-
 	serv := service.New()
 
 	if err := initializer.RegisterRpc(rpcIdRewards, rpcRewards); err != nil {
 		return err
 	}
 
-	if err := initializer.RegisterRpc(rpcIdFindMatch, rpcFindMatch(serv.Marshaler, serv.Unmarshaler)); err != nil {
+	if err := initializer.RegisterRpc(rpcIdFindMatch, rpcFindMatch(global.Marshaler, global.Unmarshaler)); err != nil {
 		return err
 	}
 

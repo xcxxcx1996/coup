@@ -40,33 +40,37 @@ const (
 type Role int32
 
 const (
+	//UNDEFINED
+	Role_UNROLE Role = 0
 	// DIPLOMAT 0
-	Role_DIPLOMAT Role = 0
+	Role_DIPLOMAT Role = 1
 	// QUEEN 1
-	Role_QUEEN Role = 1
+	Role_QUEEN Role = 2
 	// CAPTAIN 2
-	Role_CAPTAIN Role = 2
+	Role_CAPTAIN Role = 3
 	// ASSASSIN 3
-	Role_ASSASSIN Role = 3
+	Role_ASSASSIN Role = 4
 	// BARON 4
-	Role_BARON Role = 4
+	Role_BARON Role = 5
 )
 
 // Enum value maps for Role.
 var (
 	Role_name = map[int32]string{
-		0: "DIPLOMAT",
-		1: "QUEEN",
-		2: "CAPTAIN",
-		3: "ASSASSIN",
-		4: "BARON",
+		0: "UNROLE",
+		1: "DIPLOMAT",
+		2: "QUEEN",
+		3: "CAPTAIN",
+		4: "ASSASSIN",
+		5: "BARON",
 	}
 	Role_value = map[string]int32{
-		"DIPLOMAT": 0,
-		"QUEEN":    1,
-		"CAPTAIN":  2,
-		"ASSASSIN": 3,
-		"BARON":    4,
+		"UNROLE":   0,
+		"DIPLOMAT": 1,
+		"QUEEN":    2,
+		"CAPTAIN":  3,
+		"ASSASSIN": 4,
+		"BARON":    5,
 	}
 )
 
@@ -100,38 +104,45 @@ func (Role) EnumDescriptor() ([]byte, []int) {
 type State int32
 
 const (
-	// 什么都做不了
-	State_IDLE State = 0
+	//undefined
+	State_UNDEFINED State = 0
+	//什么都做不了
+	State_IDLE State = 1
 	// 自己回合开始，可以拿1，2，3块钱，和施放技能
-	State_START State = 1
+	State_START State = 2
 	// 质疑
-	State_QUESTION State = 2
+	State_QUESTION State = 3
 	// 保护自己，包括防偷牌，看牌，和刺杀
-	State_DENY_MONEY    State = 3
-	State_DENY_STEAL    State = 4
-	State_DENY_ASSASSIN State = 5
-	State_DISCARD       State = 6 // DENY_CHECK=5;
+	State_DENY_MONEY    State = 4
+	State_DENY_STEAL    State = 5
+	State_DENY_ASSASSIN State = 6
+	State_DISCARD       State = 7
+	State_CHOOSE_CARD   State = 8 // DENY_CHECK=5;
 )
 
 // Enum value maps for State.
 var (
 	State_name = map[int32]string{
-		0: "IDLE",
-		1: "START",
-		2: "QUESTION",
-		3: "DENY_MONEY",
-		4: "DENY_STEAL",
-		5: "DENY_ASSASSIN",
-		6: "DISCARD",
+		0: "UNDEFINED",
+		1: "IDLE",
+		2: "START",
+		3: "QUESTION",
+		4: "DENY_MONEY",
+		5: "DENY_STEAL",
+		6: "DENY_ASSASSIN",
+		7: "DISCARD",
+		8: "CHOOSE_CARD",
 	}
 	State_value = map[string]int32{
-		"IDLE":          0,
-		"START":         1,
-		"QUESTION":      2,
-		"DENY_MONEY":    3,
-		"DENY_STEAL":    4,
-		"DENY_ASSASSIN": 5,
-		"DISCARD":       6,
+		"UNDEFINED":     0,
+		"IDLE":          1,
+		"START":         2,
+		"QUESTION":      3,
+		"DENY_MONEY":    4,
+		"DENY_STEAL":    5,
+		"DENY_ASSASSIN": 6,
+		"DISCARD":       7,
+		"CHOOSE_CARD":   8,
 	}
 )
 
@@ -170,8 +181,8 @@ const (
 	OpCode_OPCODE_UNCODE OpCode = 0
 	// 开始游戏
 	OpCode_OPCODE_START OpCode = 1
-	// 玩家抽卡
-	OpCode_OPCODE_DRAW_CARD OpCode = 2
+	// deny_assassian结束后的flag
+	OpCode_OPCODE_COMPLETE_DENY_KILL OpCode = 2
 	// 玩家弃置卡牌
 	OpCode_OPCODE_DISCARD OpCode = 3
 	// 拿钱
@@ -193,7 +204,7 @@ const (
 	OpCode_OPCODE_DENY_STEAL OpCode = 11
 	//防止刺杀
 	OpCode_OPCODE_DENY_KILL OpCode = 12
-	// 阻止拿3块钱
+	// 阻止拿2块钱
 	OpCode_OPCODE_DENY_MONEY OpCode = 13
 	//政变
 	OpCode_OPCODE_COUP OpCode = 14
@@ -201,6 +212,9 @@ const (
 	OpCode_OPCODE_READY_START OpCode = 15
 	OpCode_OPCODE_UPDATE      OpCode = 16
 	OpCode_OPCODE_REJECTED    OpCode = 17
+	OpCode_OPCODE_CHOOSE_CARD OpCode = 18
+	OpCode_OPCODE_INFO        OpCode = 19
+	OpCode_OPCODE_TICK        OpCode = 20
 )
 
 // Enum value maps for OpCode.
@@ -208,7 +222,7 @@ var (
 	OpCode_name = map[int32]string{
 		0:  "OPCODE_UNCODE",
 		1:  "OPCODE_START",
-		2:  "OPCODE_DRAW_CARD",
+		2:  "OPCODE_COMPLETE_DENY_KILL",
 		3:  "OPCODE_DISCARD",
 		4:  "OPCODE_DRAW_COINS",
 		5:  "OPCODE_QUESTION",
@@ -224,26 +238,32 @@ var (
 		15: "OPCODE_READY_START",
 		16: "OPCODE_UPDATE",
 		17: "OPCODE_REJECTED",
+		18: "OPCODE_CHOOSE_CARD",
+		19: "OPCODE_INFO",
+		20: "OPCODE_TICK",
 	}
 	OpCode_value = map[string]int32{
-		"OPCODE_UNCODE":           0,
-		"OPCODE_START":            1,
-		"OPCODE_DRAW_CARD":        2,
-		"OPCODE_DISCARD":          3,
-		"OPCODE_DRAW_COINS":       4,
-		"OPCODE_QUESTION":         5,
-		"OPCODE_DONE":             6,
-		"OPCODE_STEAL_COINS":      7,
-		"OPCODE_CHANGE_CARD":      8,
-		"OPCODE_ASSASSIN":         9,
-		"OPCODE_DRAW_THREE_COINS": 10,
-		"OPCODE_DENY_STEAL":       11,
-		"OPCODE_DENY_KILL":        12,
-		"OPCODE_DENY_MONEY":       13,
-		"OPCODE_COUP":             14,
-		"OPCODE_READY_START":      15,
-		"OPCODE_UPDATE":           16,
-		"OPCODE_REJECTED":         17,
+		"OPCODE_UNCODE":             0,
+		"OPCODE_START":              1,
+		"OPCODE_COMPLETE_DENY_KILL": 2,
+		"OPCODE_DISCARD":            3,
+		"OPCODE_DRAW_COINS":         4,
+		"OPCODE_QUESTION":           5,
+		"OPCODE_DONE":               6,
+		"OPCODE_STEAL_COINS":        7,
+		"OPCODE_CHANGE_CARD":        8,
+		"OPCODE_ASSASSIN":           9,
+		"OPCODE_DRAW_THREE_COINS":   10,
+		"OPCODE_DENY_STEAL":         11,
+		"OPCODE_DENY_KILL":          12,
+		"OPCODE_DENY_MONEY":         13,
+		"OPCODE_COUP":               14,
+		"OPCODE_READY_START":        15,
+		"OPCODE_UPDATE":             16,
+		"OPCODE_REJECTED":           17,
+		"OPCODE_CHOOSE_CARD":        18,
+		"OPCODE_INFO":               19,
+		"OPCODE_TICK":               20,
 	}
 )
 
@@ -351,7 +371,7 @@ func (x *PlayerInfo) GetState() State {
 	if x != nil {
 		return x.State
 	}
-	return State_IDLE
+	return State_UNDEFINED
 }
 
 type Card struct {
@@ -407,7 +427,7 @@ func (x *Card) GetRole() Role {
 	if x != nil {
 		return x.Role
 	}
-	return Role_DIPLOMAT
+	return Role_UNROLE
 }
 
 // Message data sent by server to clients representing a new game round starting.
@@ -487,6 +507,100 @@ func (x *Start) GetMessage() string {
 	return ""
 }
 
+type Tick struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Deadline int64 `protobuf:"varint,1,opt,name=deadline,proto3" json:"deadline,omitempty"`
+}
+
+func (x *Tick) Reset() {
+	*x = Tick{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_coupapi_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Tick) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Tick) ProtoMessage() {}
+
+func (x *Tick) ProtoReflect() protoreflect.Message {
+	mi := &file_api_coupapi_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Tick.ProtoReflect.Descriptor instead.
+func (*Tick) Descriptor() ([]byte, []int) {
+	return file_api_coupapi_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *Tick) GetDeadline() int64 {
+	if x != nil {
+		return x.Deadline
+	}
+	return 0
+}
+
+type Info struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Info string `protobuf:"bytes,1,opt,name=info,proto3" json:"info,omitempty"`
+}
+
+func (x *Info) Reset() {
+	*x = Info{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_coupapi_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Info) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Info) ProtoMessage() {}
+
+func (x *Info) ProtoReflect() protoreflect.Message {
+	mi := &file_api_coupapi_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Info.ProtoReflect.Descriptor instead.
+func (*Info) Descriptor() ([]byte, []int) {
+	return file_api_coupapi_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *Info) GetInfo() string {
+	if x != nil {
+		return x.Info
+	}
+	return ""
+}
+
 // A game state update sent by the server to clients.
 type Update struct {
 	state         protoimpl.MessageState
@@ -499,7 +613,6 @@ type Update struct {
 	CurrentPlayerId  string `protobuf:"bytes,2,opt,name=current_player_id,json=currentPlayerId,proto3" json:"current_player_id,omitempty"`
 	QuestionPlayerId string `protobuf:"bytes,3,opt,name=question_player_id,json=questionPlayerId,proto3" json:"question_player_id,omitempty"`
 	// The deadline time by which the player must submit their move, or forfeit.
-	Deadline int64 `protobuf:"varint,4,opt,name=deadline,proto3" json:"deadline,omitempty"`
 	//比赛信息
 	Message string `protobuf:"bytes,5,opt,name=message,proto3" json:"message,omitempty"`
 }
@@ -507,7 +620,7 @@ type Update struct {
 func (x *Update) Reset() {
 	*x = Update{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_api_coupapi_proto_msgTypes[3]
+		mi := &file_api_coupapi_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -520,7 +633,7 @@ func (x *Update) String() string {
 func (*Update) ProtoMessage() {}
 
 func (x *Update) ProtoReflect() protoreflect.Message {
-	mi := &file_api_coupapi_proto_msgTypes[3]
+	mi := &file_api_coupapi_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -533,7 +646,7 @@ func (x *Update) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Update.ProtoReflect.Descriptor instead.
 func (*Update) Descriptor() ([]byte, []int) {
-	return file_api_coupapi_proto_rawDescGZIP(), []int{3}
+	return file_api_coupapi_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *Update) GetPlayerInfos() map[string]*PlayerInfo {
@@ -557,13 +670,6 @@ func (x *Update) GetQuestionPlayerId() string {
 	return ""
 }
 
-func (x *Update) GetDeadline() int64 {
-	if x != nil {
-		return x.Deadline
-	}
-	return 0
-}
-
 func (x *Update) GetMessage() string {
 	if x != nil {
 		return x.Message
@@ -581,7 +687,7 @@ type Done struct {
 func (x *Done) Reset() {
 	*x = Done{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_api_coupapi_proto_msgTypes[4]
+		mi := &file_api_coupapi_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -594,7 +700,7 @@ func (x *Done) String() string {
 func (*Done) ProtoMessage() {}
 
 func (x *Done) ProtoReflect() protoreflect.Message {
-	mi := &file_api_coupapi_proto_msgTypes[4]
+	mi := &file_api_coupapi_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -607,7 +713,7 @@ func (x *Done) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Done.ProtoReflect.Descriptor instead.
 func (*Done) Descriptor() ([]byte, []int) {
-	return file_api_coupapi_proto_rawDescGZIP(), []int{4}
+	return file_api_coupapi_proto_rawDescGZIP(), []int{6}
 }
 
 type ReadyToStart struct {
@@ -621,7 +727,7 @@ type ReadyToStart struct {
 func (x *ReadyToStart) Reset() {
 	*x = ReadyToStart{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_api_coupapi_proto_msgTypes[5]
+		mi := &file_api_coupapi_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -634,7 +740,7 @@ func (x *ReadyToStart) String() string {
 func (*ReadyToStart) ProtoMessage() {}
 
 func (x *ReadyToStart) ProtoReflect() protoreflect.Message {
-	mi := &file_api_coupapi_proto_msgTypes[5]
+	mi := &file_api_coupapi_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -647,7 +753,7 @@ func (x *ReadyToStart) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReadyToStart.ProtoReflect.Descriptor instead.
 func (*ReadyToStart) Descriptor() ([]byte, []int) {
-	return file_api_coupapi_proto_rawDescGZIP(), []int{5}
+	return file_api_coupapi_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ReadyToStart) GetNextGameStart() int64 {
@@ -668,7 +774,7 @@ type Question struct {
 func (x *Question) Reset() {
 	*x = Question{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_api_coupapi_proto_msgTypes[6]
+		mi := &file_api_coupapi_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -681,7 +787,7 @@ func (x *Question) String() string {
 func (*Question) ProtoMessage() {}
 
 func (x *Question) ProtoReflect() protoreflect.Message {
-	mi := &file_api_coupapi_proto_msgTypes[6]
+	mi := &file_api_coupapi_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -694,7 +800,7 @@ func (x *Question) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Question.ProtoReflect.Descriptor instead.
 func (*Question) Descriptor() ([]byte, []int) {
-	return file_api_coupapi_proto_rawDescGZIP(), []int{6}
+	return file_api_coupapi_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Question) GetIsQuestion() bool {
@@ -715,7 +821,7 @@ type GetCoin struct {
 func (x *GetCoin) Reset() {
 	*x = GetCoin{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_api_coupapi_proto_msgTypes[7]
+		mi := &file_api_coupapi_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -728,7 +834,7 @@ func (x *GetCoin) String() string {
 func (*GetCoin) ProtoMessage() {}
 
 func (x *GetCoin) ProtoReflect() protoreflect.Message {
-	mi := &file_api_coupapi_proto_msgTypes[7]
+	mi := &file_api_coupapi_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -741,7 +847,7 @@ func (x *GetCoin) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCoin.ProtoReflect.Descriptor instead.
 func (*GetCoin) Descriptor() ([]byte, []int) {
-	return file_api_coupapi_proto_rawDescGZIP(), []int{7}
+	return file_api_coupapi_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetCoin) GetCoins() int32 {
@@ -763,7 +869,7 @@ type Discard struct {
 func (x *Discard) Reset() {
 	*x = Discard{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_api_coupapi_proto_msgTypes[8]
+		mi := &file_api_coupapi_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -776,7 +882,7 @@ func (x *Discard) String() string {
 func (*Discard) ProtoMessage() {}
 
 func (x *Discard) ProtoReflect() protoreflect.Message {
-	mi := &file_api_coupapi_proto_msgTypes[8]
+	mi := &file_api_coupapi_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -789,7 +895,7 @@ func (x *Discard) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Discard.ProtoReflect.Descriptor instead.
 func (*Discard) Descriptor() ([]byte, []int) {
-	return file_api_coupapi_proto_rawDescGZIP(), []int{8}
+	return file_api_coupapi_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *Discard) GetPlayerId() string {
@@ -811,13 +917,14 @@ type StealCoins struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// 指定玩家id
 	PlayerId string `protobuf:"bytes,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
 }
 
 func (x *StealCoins) Reset() {
 	*x = StealCoins{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_api_coupapi_proto_msgTypes[9]
+		mi := &file_api_coupapi_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -830,7 +937,7 @@ func (x *StealCoins) String() string {
 func (*StealCoins) ProtoMessage() {}
 
 func (x *StealCoins) ProtoReflect() protoreflect.Message {
-	mi := &file_api_coupapi_proto_msgTypes[9]
+	mi := &file_api_coupapi_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -843,7 +950,7 @@ func (x *StealCoins) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StealCoins.ProtoReflect.Descriptor instead.
 func (*StealCoins) Descriptor() ([]byte, []int) {
-	return file_api_coupapi_proto_rawDescGZIP(), []int{9}
+	return file_api_coupapi_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *StealCoins) GetPlayerId() string {
@@ -853,118 +960,16 @@ func (x *StealCoins) GetPlayerId() string {
 	return ""
 }
 
-type ChangeSingleCard struct {
+type ChangeCard struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	PlayerId string `protobuf:"bytes,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
-	CardId   string `protobuf:"bytes,2,opt,name=card_id,json=cardId,proto3" json:"card_id,omitempty"`
+	Cards []string `protobuf:"bytes,1,rep,name=cards,proto3" json:"cards,omitempty"`
 }
 
-func (x *ChangeSingleCard) Reset() {
-	*x = ChangeSingleCard{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_api_coupapi_proto_msgTypes[10]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ChangeSingleCard) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ChangeSingleCard) ProtoMessage() {}
-
-func (x *ChangeSingleCard) ProtoReflect() protoreflect.Message {
-	mi := &file_api_coupapi_proto_msgTypes[10]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ChangeSingleCard.ProtoReflect.Descriptor instead.
-func (*ChangeSingleCard) Descriptor() ([]byte, []int) {
-	return file_api_coupapi_proto_rawDescGZIP(), []int{10}
-}
-
-func (x *ChangeSingleCard) GetPlayerId() string {
-	if x != nil {
-		return x.PlayerId
-	}
-	return ""
-}
-
-func (x *ChangeSingleCard) GetCardId() string {
-	if x != nil {
-		return x.CardId
-	}
-	return ""
-}
-
-type DenyAssassin struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	IsDeny bool `protobuf:"varint,1,opt,name=is_deny,json=isDeny,proto3" json:"is_deny,omitempty"`
-}
-
-func (x *DenyAssassin) Reset() {
-	*x = DenyAssassin{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_api_coupapi_proto_msgTypes[11]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *DenyAssassin) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DenyAssassin) ProtoMessage() {}
-
-func (x *DenyAssassin) ProtoReflect() protoreflect.Message {
-	mi := &file_api_coupapi_proto_msgTypes[11]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DenyAssassin.ProtoReflect.Descriptor instead.
-func (*DenyAssassin) Descriptor() ([]byte, []int) {
-	return file_api_coupapi_proto_rawDescGZIP(), []int{11}
-}
-
-func (x *DenyAssassin) GetIsDeny() bool {
-	if x != nil {
-		return x.IsDeny
-	}
-	return false
-}
-
-type DenyMoney struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	IsDeny bool `protobuf:"varint,1,opt,name=is_deny,json=isDeny,proto3" json:"is_deny,omitempty"`
-}
-
-func (x *DenyMoney) Reset() {
-	*x = DenyMoney{}
+func (x *ChangeCard) Reset() {
+	*x = ChangeCard{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_api_coupapi_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -972,13 +977,13 @@ func (x *DenyMoney) Reset() {
 	}
 }
 
-func (x *DenyMoney) String() string {
+func (x *ChangeCard) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DenyMoney) ProtoMessage() {}
+func (*ChangeCard) ProtoMessage() {}
 
-func (x *DenyMoney) ProtoReflect() protoreflect.Message {
+func (x *ChangeCard) ProtoReflect() protoreflect.Message {
 	mi := &file_api_coupapi_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -990,19 +995,19 @@ func (x *DenyMoney) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DenyMoney.ProtoReflect.Descriptor instead.
-func (*DenyMoney) Descriptor() ([]byte, []int) {
+// Deprecated: Use ChangeCard.ProtoReflect.Descriptor instead.
+func (*ChangeCard) Descriptor() ([]byte, []int) {
 	return file_api_coupapi_proto_rawDescGZIP(), []int{12}
 }
 
-func (x *DenyMoney) GetIsDeny() bool {
+func (x *ChangeCard) GetCards() []string {
 	if x != nil {
-		return x.IsDeny
+		return x.Cards
 	}
-	return false
+	return nil
 }
 
-type DenySteal struct {
+type Deny struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -1010,8 +1015,8 @@ type DenySteal struct {
 	IsDeny bool `protobuf:"varint,1,opt,name=is_deny,json=isDeny,proto3" json:"is_deny,omitempty"`
 }
 
-func (x *DenySteal) Reset() {
-	*x = DenySteal{}
+func (x *Deny) Reset() {
+	*x = Deny{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_api_coupapi_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1019,13 +1024,13 @@ func (x *DenySteal) Reset() {
 	}
 }
 
-func (x *DenySteal) String() string {
+func (x *Deny) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DenySteal) ProtoMessage() {}
+func (*Deny) ProtoMessage() {}
 
-func (x *DenySteal) ProtoReflect() protoreflect.Message {
+func (x *Deny) ProtoReflect() protoreflect.Message {
 	mi := &file_api_coupapi_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1037,12 +1042,12 @@ func (x *DenySteal) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DenySteal.ProtoReflect.Descriptor instead.
-func (*DenySteal) Descriptor() ([]byte, []int) {
+// Deprecated: Use Deny.ProtoReflect.Descriptor instead.
+func (*Deny) Descriptor() ([]byte, []int) {
 	return file_api_coupapi_proto_rawDescGZIP(), []int{13}
 }
 
-func (x *DenySteal) GetIsDeny() bool {
+func (x *Deny) GetIsDeny() bool {
 	if x != nil {
 		return x.IsDeny
 	}
@@ -1054,9 +1059,8 @@ type Assassin struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// 指定玩家id
 	PlayerId string `protobuf:"bytes,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
-	//Card
-	CardId string `protobuf:"bytes,2,opt,name=card_id,json=cardId,proto3" json:"card_id,omitempty"`
 }
 
 func (x *Assassin) Reset() {
@@ -1098,21 +1102,13 @@ func (x *Assassin) GetPlayerId() string {
 	return ""
 }
 
-func (x *Assassin) GetCardId() string {
-	if x != nil {
-		return x.CardId
-	}
-	return ""
-}
-
 type Coup struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// 指定玩家id
 	PlayerId string `protobuf:"bytes,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
-	//Card
-	CardId string `protobuf:"bytes,2,opt,name=card_id,json=cardId,proto3" json:"card_id,omitempty"`
 }
 
 func (x *Coup) Reset() {
@@ -1154,11 +1150,98 @@ func (x *Coup) GetPlayerId() string {
 	return ""
 }
 
-func (x *Coup) GetCardId() string {
-	if x != nil {
-		return x.CardId
+type ChangeCardRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Cards []*Card `protobuf:"bytes,1,rep,name=cards,proto3" json:"cards,omitempty"`
+}
+
+func (x *ChangeCardRequest) Reset() {
+	*x = ChangeCardRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_coupapi_proto_msgTypes[16]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
 	}
-	return ""
+}
+
+func (x *ChangeCardRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChangeCardRequest) ProtoMessage() {}
+
+func (x *ChangeCardRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_coupapi_proto_msgTypes[16]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChangeCardRequest.ProtoReflect.Descriptor instead.
+func (*ChangeCardRequest) Descriptor() ([]byte, []int) {
+	return file_api_coupapi_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *ChangeCardRequest) GetCards() []*Card {
+	if x != nil {
+		return x.Cards
+	}
+	return nil
+}
+
+type ChangeCardResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Cards []string `protobuf:"bytes,1,rep,name=cards,proto3" json:"cards,omitempty"`
+}
+
+func (x *ChangeCardResponse) Reset() {
+	*x = ChangeCardResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_coupapi_proto_msgTypes[17]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ChangeCardResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChangeCardResponse) ProtoMessage() {}
+
+func (x *ChangeCardResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_coupapi_proto_msgTypes[17]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChangeCardResponse.ProtoReflect.Descriptor instead.
+func (*ChangeCardResponse) Descriptor() ([]byte, []int) {
+	return file_api_coupapi_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *ChangeCardResponse) GetCards() []string {
+	if x != nil {
+		return x.Cards
+	}
+	return nil
 }
 
 // Payload for an RPC request to find a match.
@@ -1174,7 +1257,7 @@ type RpcFindMatchRequest struct {
 func (x *RpcFindMatchRequest) Reset() {
 	*x = RpcFindMatchRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_api_coupapi_proto_msgTypes[16]
+		mi := &file_api_coupapi_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1187,7 +1270,7 @@ func (x *RpcFindMatchRequest) String() string {
 func (*RpcFindMatchRequest) ProtoMessage() {}
 
 func (x *RpcFindMatchRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_coupapi_proto_msgTypes[16]
+	mi := &file_api_coupapi_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1200,7 +1283,7 @@ func (x *RpcFindMatchRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RpcFindMatchRequest.ProtoReflect.Descriptor instead.
 func (*RpcFindMatchRequest) Descriptor() ([]byte, []int) {
-	return file_api_coupapi_proto_rawDescGZIP(), []int{16}
+	return file_api_coupapi_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *RpcFindMatchRequest) GetFast() bool {
@@ -1223,7 +1306,7 @@ type RpcFindMatchResponse struct {
 func (x *RpcFindMatchResponse) Reset() {
 	*x = RpcFindMatchResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_api_coupapi_proto_msgTypes[17]
+		mi := &file_api_coupapi_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1236,7 +1319,7 @@ func (x *RpcFindMatchResponse) String() string {
 func (*RpcFindMatchResponse) ProtoMessage() {}
 
 func (x *RpcFindMatchResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_coupapi_proto_msgTypes[17]
+	mi := &file_api_coupapi_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1249,7 +1332,7 @@ func (x *RpcFindMatchResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RpcFindMatchResponse.ProtoReflect.Descriptor instead.
 func (*RpcFindMatchResponse) Descriptor() ([]byte, []int) {
-	return file_api_coupapi_proto_rawDescGZIP(), []int{17}
+	return file_api_coupapi_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *RpcFindMatchResponse) GetMatchIds() []string {
@@ -1291,7 +1374,11 @@ var file_api_coupapi_proto_rawDesc = []byte{
 	0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x25, 0x0a, 0x05,
 	0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x61, 0x70,
 	0x69, 0x2e, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x05, 0x76, 0x61,
-	0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0xa9, 0x02, 0x0a, 0x06, 0x55, 0x70, 0x64, 0x61,
+	0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x22, 0x0a, 0x04, 0x54, 0x69, 0x63, 0x6b, 0x12,
+	0x1a, 0x0a, 0x08, 0x64, 0x65, 0x61, 0x64, 0x6c, 0x69, 0x6e, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x03, 0x52, 0x08, 0x64, 0x65, 0x61, 0x64, 0x6c, 0x69, 0x6e, 0x65, 0x22, 0x1a, 0x0a, 0x04, 0x49,
+	0x6e, 0x66, 0x6f, 0x12, 0x12, 0x0a, 0x04, 0x69, 0x6e, 0x66, 0x6f, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x04, 0x69, 0x6e, 0x66, 0x6f, 0x22, 0x8d, 0x02, 0x0a, 0x06, 0x55, 0x70, 0x64, 0x61,
 	0x74, 0x65, 0x12, 0x3e, 0x0a, 0x0b, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f,
 	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x55, 0x70,
 	0x64, 0x61, 0x74, 0x65, 0x2e, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f, 0x73,
@@ -1301,73 +1388,70 @@ var file_api_coupapi_proto_rawDesc = []byte{
 	0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x49, 0x64, 0x12, 0x2c,
 	0x0a, 0x12, 0x71, 0x75, 0x65, 0x73, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x70, 0x6c, 0x61, 0x79, 0x65,
 	0x72, 0x5f, 0x69, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x10, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x69, 0x6f, 0x6e, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x49, 0x64, 0x12, 0x1a, 0x0a, 0x08,
-	0x64, 0x65, 0x61, 0x64, 0x6c, 0x69, 0x6e, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x52, 0x08,
-	0x64, 0x65, 0x61, 0x64, 0x6c, 0x69, 0x6e, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73,
-	0x61, 0x67, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61,
-	0x67, 0x65, 0x1a, 0x4f, 0x0a, 0x10, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f,
-	0x73, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x25, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75,
-	0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x50, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a,
-	0x02, 0x38, 0x01, 0x22, 0x06, 0x0a, 0x04, 0x44, 0x6f, 0x6e, 0x65, 0x22, 0x36, 0x0a, 0x0c, 0x52,
-	0x65, 0x61, 0x64, 0x79, 0x54, 0x6f, 0x53, 0x74, 0x61, 0x72, 0x74, 0x12, 0x26, 0x0a, 0x0f, 0x6e,
-	0x65, 0x78, 0x74, 0x5f, 0x67, 0x61, 0x6d, 0x65, 0x5f, 0x73, 0x74, 0x61, 0x72, 0x74, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x03, 0x52, 0x0d, 0x6e, 0x65, 0x78, 0x74, 0x47, 0x61, 0x6d, 0x65, 0x53, 0x74,
-	0x61, 0x72, 0x74, 0x22, 0x2b, 0x0a, 0x08, 0x51, 0x75, 0x65, 0x73, 0x74, 0x69, 0x6f, 0x6e, 0x12,
-	0x1f, 0x0a, 0x0b, 0x69, 0x73, 0x5f, 0x71, 0x75, 0x65, 0x73, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x08, 0x52, 0x0a, 0x69, 0x73, 0x51, 0x75, 0x65, 0x73, 0x74, 0x69, 0x6f, 0x6e,
-	0x22, 0x1f, 0x0a, 0x07, 0x47, 0x65, 0x74, 0x43, 0x6f, 0x69, 0x6e, 0x12, 0x14, 0x0a, 0x05, 0x63,
-	0x6f, 0x69, 0x6e, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x63, 0x6f, 0x69, 0x6e,
-	0x73, 0x22, 0x3f, 0x0a, 0x07, 0x44, 0x69, 0x73, 0x63, 0x61, 0x72, 0x64, 0x12, 0x1b, 0x0a, 0x09,
-	0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x08, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x63, 0x61, 0x72,
-	0x64, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x63, 0x61, 0x72, 0x64,
-	0x49, 0x64, 0x22, 0x29, 0x0a, 0x0a, 0x53, 0x74, 0x65, 0x61, 0x6c, 0x43, 0x6f, 0x69, 0x6e, 0x73,
+	0x74, 0x69, 0x6f, 0x6e, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x49, 0x64, 0x12, 0x18, 0x0a, 0x07,
+	0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d,
+	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x1a, 0x4f, 0x0a, 0x10, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x49, 0x6e, 0x66, 0x6f, 0x73, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65,
+	0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x25, 0x0a, 0x05,
+	0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x61, 0x70,
+	0x69, 0x2e, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x05, 0x76, 0x61,
+	0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x06, 0x0a, 0x04, 0x44, 0x6f, 0x6e, 0x65, 0x22,
+	0x36, 0x0a, 0x0c, 0x52, 0x65, 0x61, 0x64, 0x79, 0x54, 0x6f, 0x53, 0x74, 0x61, 0x72, 0x74, 0x12,
+	0x26, 0x0a, 0x0f, 0x6e, 0x65, 0x78, 0x74, 0x5f, 0x67, 0x61, 0x6d, 0x65, 0x5f, 0x73, 0x74, 0x61,
+	0x72, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0d, 0x6e, 0x65, 0x78, 0x74, 0x47, 0x61,
+	0x6d, 0x65, 0x53, 0x74, 0x61, 0x72, 0x74, 0x22, 0x2b, 0x0a, 0x08, 0x51, 0x75, 0x65, 0x73, 0x74,
+	0x69, 0x6f, 0x6e, 0x12, 0x1f, 0x0a, 0x0b, 0x69, 0x73, 0x5f, 0x71, 0x75, 0x65, 0x73, 0x74, 0x69,
+	0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0a, 0x69, 0x73, 0x51, 0x75, 0x65, 0x73,
+	0x74, 0x69, 0x6f, 0x6e, 0x22, 0x1f, 0x0a, 0x07, 0x47, 0x65, 0x74, 0x43, 0x6f, 0x69, 0x6e, 0x12,
+	0x14, 0x0a, 0x05, 0x63, 0x6f, 0x69, 0x6e, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05,
+	0x63, 0x6f, 0x69, 0x6e, 0x73, 0x22, 0x3f, 0x0a, 0x07, 0x44, 0x69, 0x73, 0x63, 0x61, 0x72, 0x64,
 	0x12, 0x1b, 0x0a, 0x09, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x49, 0x64, 0x22, 0x48, 0x0a,
-	0x10, 0x43, 0x68, 0x61, 0x6e, 0x67, 0x65, 0x53, 0x69, 0x6e, 0x67, 0x6c, 0x65, 0x43, 0x61, 0x72,
-	0x64, 0x12, 0x1b, 0x0a, 0x09, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x49, 0x64, 0x12, 0x17,
-	0x0a, 0x07, 0x63, 0x61, 0x72, 0x64, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x06, 0x63, 0x61, 0x72, 0x64, 0x49, 0x64, 0x22, 0x27, 0x0a, 0x0c, 0x44, 0x65, 0x6e, 0x79, 0x41,
-	0x73, 0x73, 0x61, 0x73, 0x73, 0x69, 0x6e, 0x12, 0x17, 0x0a, 0x07, 0x69, 0x73, 0x5f, 0x64, 0x65,
-	0x6e, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x06, 0x69, 0x73, 0x44, 0x65, 0x6e, 0x79,
-	0x22, 0x24, 0x0a, 0x09, 0x44, 0x65, 0x6e, 0x79, 0x4d, 0x6f, 0x6e, 0x65, 0x79, 0x12, 0x17, 0x0a,
+	0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x49, 0x64, 0x12, 0x17, 0x0a,
+	0x07, 0x63, 0x61, 0x72, 0x64, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06,
+	0x63, 0x61, 0x72, 0x64, 0x49, 0x64, 0x22, 0x29, 0x0a, 0x0a, 0x53, 0x74, 0x65, 0x61, 0x6c, 0x43,
+	0x6f, 0x69, 0x6e, 0x73, 0x12, 0x1b, 0x0a, 0x09, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x5f, 0x69,
+	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x49,
+	0x64, 0x22, 0x22, 0x0a, 0x0a, 0x43, 0x68, 0x61, 0x6e, 0x67, 0x65, 0x43, 0x61, 0x72, 0x64, 0x12,
+	0x14, 0x0a, 0x05, 0x63, 0x61, 0x72, 0x64, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x05,
+	0x63, 0x61, 0x72, 0x64, 0x73, 0x22, 0x1f, 0x0a, 0x04, 0x44, 0x65, 0x6e, 0x79, 0x12, 0x17, 0x0a,
 	0x07, 0x69, 0x73, 0x5f, 0x64, 0x65, 0x6e, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x06,
-	0x69, 0x73, 0x44, 0x65, 0x6e, 0x79, 0x22, 0x24, 0x0a, 0x09, 0x44, 0x65, 0x6e, 0x79, 0x53, 0x74,
-	0x65, 0x61, 0x6c, 0x12, 0x17, 0x0a, 0x07, 0x69, 0x73, 0x5f, 0x64, 0x65, 0x6e, 0x79, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x08, 0x52, 0x06, 0x69, 0x73, 0x44, 0x65, 0x6e, 0x79, 0x22, 0x40, 0x0a, 0x08,
-	0x41, 0x73, 0x73, 0x61, 0x73, 0x73, 0x69, 0x6e, 0x12, 0x1b, 0x0a, 0x09, 0x70, 0x6c, 0x61, 0x79,
-	0x65, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x6c, 0x61,
-	0x79, 0x65, 0x72, 0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x63, 0x61, 0x72, 0x64, 0x5f, 0x69, 0x64,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x63, 0x61, 0x72, 0x64, 0x49, 0x64, 0x22, 0x3c,
-	0x0a, 0x04, 0x43, 0x6f, 0x75, 0x70, 0x12, 0x1b, 0x0a, 0x09, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72,
-	0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x6c, 0x61, 0x79, 0x65,
-	0x72, 0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x63, 0x61, 0x72, 0x64, 0x5f, 0x69, 0x64, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x63, 0x61, 0x72, 0x64, 0x49, 0x64, 0x22, 0x29, 0x0a, 0x13,
-	0x52, 0x70, 0x63, 0x46, 0x69, 0x6e, 0x64, 0x4d, 0x61, 0x74, 0x63, 0x68, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x66, 0x61, 0x73, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x08, 0x52, 0x04, 0x66, 0x61, 0x73, 0x74, 0x22, 0x33, 0x0a, 0x14, 0x52, 0x70, 0x63, 0x46, 0x69,
-	0x6e, 0x64, 0x4d, 0x61, 0x74, 0x63, 0x68, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
-	0x1b, 0x0a, 0x09, 0x6d, 0x61, 0x74, 0x63, 0x68, 0x5f, 0x69, 0x64, 0x73, 0x18, 0x01, 0x20, 0x03,
-	0x28, 0x09, 0x52, 0x08, 0x6d, 0x61, 0x74, 0x63, 0x68, 0x49, 0x64, 0x73, 0x2a, 0x45, 0x0a, 0x04,
-	0x52, 0x6f, 0x6c, 0x65, 0x12, 0x0c, 0x0a, 0x08, 0x44, 0x49, 0x50, 0x4c, 0x4f, 0x4d, 0x41, 0x54,
-	0x10, 0x00, 0x12, 0x09, 0x0a, 0x05, 0x51, 0x55, 0x45, 0x45, 0x4e, 0x10, 0x01, 0x12, 0x0b, 0x0a,
-	0x07, 0x43, 0x41, 0x50, 0x54, 0x41, 0x49, 0x4e, 0x10, 0x02, 0x12, 0x0c, 0x0a, 0x08, 0x41, 0x53,
-	0x53, 0x41, 0x53, 0x53, 0x49, 0x4e, 0x10, 0x03, 0x12, 0x09, 0x0a, 0x05, 0x42, 0x41, 0x52, 0x4f,
-	0x4e, 0x10, 0x04, 0x2a, 0x6a, 0x0a, 0x05, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x08, 0x0a, 0x04,
-	0x49, 0x44, 0x4c, 0x45, 0x10, 0x00, 0x12, 0x09, 0x0a, 0x05, 0x53, 0x54, 0x41, 0x52, 0x54, 0x10,
-	0x01, 0x12, 0x0c, 0x0a, 0x08, 0x51, 0x55, 0x45, 0x53, 0x54, 0x49, 0x4f, 0x4e, 0x10, 0x02, 0x12,
-	0x0e, 0x0a, 0x0a, 0x44, 0x45, 0x4e, 0x59, 0x5f, 0x4d, 0x4f, 0x4e, 0x45, 0x59, 0x10, 0x03, 0x12,
-	0x0e, 0x0a, 0x0a, 0x44, 0x45, 0x4e, 0x59, 0x5f, 0x53, 0x54, 0x45, 0x41, 0x4c, 0x10, 0x04, 0x12,
-	0x11, 0x0a, 0x0d, 0x44, 0x45, 0x4e, 0x59, 0x5f, 0x41, 0x53, 0x53, 0x41, 0x53, 0x53, 0x49, 0x4e,
-	0x10, 0x05, 0x12, 0x0b, 0x0a, 0x07, 0x44, 0x49, 0x53, 0x43, 0x41, 0x52, 0x44, 0x10, 0x06, 0x2a,
-	0x8b, 0x03, 0x0a, 0x06, 0x4f, 0x70, 0x43, 0x6f, 0x64, 0x65, 0x12, 0x11, 0x0a, 0x0d, 0x4f, 0x50,
-	0x43, 0x4f, 0x44, 0x45, 0x5f, 0x55, 0x4e, 0x43, 0x4f, 0x44, 0x45, 0x10, 0x00, 0x12, 0x10, 0x0a,
-	0x0c, 0x4f, 0x50, 0x43, 0x4f, 0x44, 0x45, 0x5f, 0x53, 0x54, 0x41, 0x52, 0x54, 0x10, 0x01, 0x12,
-	0x14, 0x0a, 0x10, 0x4f, 0x50, 0x43, 0x4f, 0x44, 0x45, 0x5f, 0x44, 0x52, 0x41, 0x57, 0x5f, 0x43,
-	0x41, 0x52, 0x44, 0x10, 0x02, 0x12, 0x12, 0x0a, 0x0e, 0x4f, 0x50, 0x43, 0x4f, 0x44, 0x45, 0x5f,
+	0x69, 0x73, 0x44, 0x65, 0x6e, 0x79, 0x22, 0x27, 0x0a, 0x08, 0x41, 0x73, 0x73, 0x61, 0x73, 0x73,
+	0x69, 0x6e, 0x12, 0x1b, 0x0a, 0x09, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x49, 0x64, 0x22,
+	0x23, 0x0a, 0x04, 0x43, 0x6f, 0x75, 0x70, 0x12, 0x1b, 0x0a, 0x09, 0x70, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x49, 0x64, 0x22, 0x34, 0x0a, 0x11, 0x43, 0x68, 0x61, 0x6e, 0x67, 0x65, 0x43, 0x61,
+	0x72, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1f, 0x0a, 0x05, 0x63, 0x61, 0x72,
+	0x64, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x09, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x43,
+	0x61, 0x72, 0x64, 0x52, 0x05, 0x63, 0x61, 0x72, 0x64, 0x73, 0x22, 0x2a, 0x0a, 0x12, 0x43, 0x68,
+	0x61, 0x6e, 0x67, 0x65, 0x43, 0x61, 0x72, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x14, 0x0a, 0x05, 0x63, 0x61, 0x72, 0x64, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52,
+	0x05, 0x63, 0x61, 0x72, 0x64, 0x73, 0x22, 0x29, 0x0a, 0x13, 0x52, 0x70, 0x63, 0x46, 0x69, 0x6e,
+	0x64, 0x4d, 0x61, 0x74, 0x63, 0x68, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a,
+	0x04, 0x66, 0x61, 0x73, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x04, 0x66, 0x61, 0x73,
+	0x74, 0x22, 0x33, 0x0a, 0x14, 0x52, 0x70, 0x63, 0x46, 0x69, 0x6e, 0x64, 0x4d, 0x61, 0x74, 0x63,
+	0x68, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1b, 0x0a, 0x09, 0x6d, 0x61, 0x74,
+	0x63, 0x68, 0x5f, 0x69, 0x64, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x61,
+	0x74, 0x63, 0x68, 0x49, 0x64, 0x73, 0x2a, 0x51, 0x0a, 0x04, 0x52, 0x6f, 0x6c, 0x65, 0x12, 0x0a,
+	0x0a, 0x06, 0x55, 0x4e, 0x52, 0x4f, 0x4c, 0x45, 0x10, 0x00, 0x12, 0x0c, 0x0a, 0x08, 0x44, 0x49,
+	0x50, 0x4c, 0x4f, 0x4d, 0x41, 0x54, 0x10, 0x01, 0x12, 0x09, 0x0a, 0x05, 0x51, 0x55, 0x45, 0x45,
+	0x4e, 0x10, 0x02, 0x12, 0x0b, 0x0a, 0x07, 0x43, 0x41, 0x50, 0x54, 0x41, 0x49, 0x4e, 0x10, 0x03,
+	0x12, 0x0c, 0x0a, 0x08, 0x41, 0x53, 0x53, 0x41, 0x53, 0x53, 0x49, 0x4e, 0x10, 0x04, 0x12, 0x09,
+	0x0a, 0x05, 0x42, 0x41, 0x52, 0x4f, 0x4e, 0x10, 0x05, 0x2a, 0x8a, 0x01, 0x0a, 0x05, 0x53, 0x74,
+	0x61, 0x74, 0x65, 0x12, 0x0d, 0x0a, 0x09, 0x55, 0x4e, 0x44, 0x45, 0x46, 0x49, 0x4e, 0x45, 0x44,
+	0x10, 0x00, 0x12, 0x08, 0x0a, 0x04, 0x49, 0x44, 0x4c, 0x45, 0x10, 0x01, 0x12, 0x09, 0x0a, 0x05,
+	0x53, 0x54, 0x41, 0x52, 0x54, 0x10, 0x02, 0x12, 0x0c, 0x0a, 0x08, 0x51, 0x55, 0x45, 0x53, 0x54,
+	0x49, 0x4f, 0x4e, 0x10, 0x03, 0x12, 0x0e, 0x0a, 0x0a, 0x44, 0x45, 0x4e, 0x59, 0x5f, 0x4d, 0x4f,
+	0x4e, 0x45, 0x59, 0x10, 0x04, 0x12, 0x0e, 0x0a, 0x0a, 0x44, 0x45, 0x4e, 0x59, 0x5f, 0x53, 0x54,
+	0x45, 0x41, 0x4c, 0x10, 0x05, 0x12, 0x11, 0x0a, 0x0d, 0x44, 0x45, 0x4e, 0x59, 0x5f, 0x41, 0x53,
+	0x53, 0x41, 0x53, 0x53, 0x49, 0x4e, 0x10, 0x06, 0x12, 0x0b, 0x0a, 0x07, 0x44, 0x49, 0x53, 0x43,
+	0x41, 0x52, 0x44, 0x10, 0x07, 0x12, 0x0f, 0x0a, 0x0b, 0x43, 0x48, 0x4f, 0x4f, 0x53, 0x45, 0x5f,
+	0x43, 0x41, 0x52, 0x44, 0x10, 0x08, 0x2a, 0xce, 0x03, 0x0a, 0x06, 0x4f, 0x70, 0x43, 0x6f, 0x64,
+	0x65, 0x12, 0x11, 0x0a, 0x0d, 0x4f, 0x50, 0x43, 0x4f, 0x44, 0x45, 0x5f, 0x55, 0x4e, 0x43, 0x4f,
+	0x44, 0x45, 0x10, 0x00, 0x12, 0x10, 0x0a, 0x0c, 0x4f, 0x50, 0x43, 0x4f, 0x44, 0x45, 0x5f, 0x53,
+	0x54, 0x41, 0x52, 0x54, 0x10, 0x01, 0x12, 0x1d, 0x0a, 0x19, 0x4f, 0x50, 0x43, 0x4f, 0x44, 0x45,
+	0x5f, 0x43, 0x4f, 0x4d, 0x50, 0x4c, 0x45, 0x54, 0x45, 0x5f, 0x44, 0x45, 0x4e, 0x59, 0x5f, 0x4b,
+	0x49, 0x4c, 0x4c, 0x10, 0x02, 0x12, 0x12, 0x0a, 0x0e, 0x4f, 0x50, 0x43, 0x4f, 0x44, 0x45, 0x5f,
 	0x44, 0x49, 0x53, 0x43, 0x41, 0x52, 0x44, 0x10, 0x03, 0x12, 0x15, 0x0a, 0x11, 0x4f, 0x50, 0x43,
 	0x4f, 0x44, 0x45, 0x5f, 0x44, 0x52, 0x41, 0x57, 0x5f, 0x43, 0x4f, 0x49, 0x4e, 0x53, 0x10, 0x04,
 	0x12, 0x13, 0x0a, 0x0f, 0x4f, 0x50, 0x43, 0x4f, 0x44, 0x45, 0x5f, 0x51, 0x55, 0x45, 0x53, 0x54,
@@ -1387,8 +1471,12 @@ var file_api_coupapi_proto_rawDesc = []byte{
 	0x12, 0x4f, 0x50, 0x43, 0x4f, 0x44, 0x45, 0x5f, 0x52, 0x45, 0x41, 0x44, 0x59, 0x5f, 0x53, 0x54,
 	0x41, 0x52, 0x54, 0x10, 0x0f, 0x12, 0x11, 0x0a, 0x0d, 0x4f, 0x50, 0x43, 0x4f, 0x44, 0x45, 0x5f,
 	0x55, 0x50, 0x44, 0x41, 0x54, 0x45, 0x10, 0x10, 0x12, 0x13, 0x0a, 0x0f, 0x4f, 0x50, 0x43, 0x4f,
-	0x44, 0x45, 0x5f, 0x52, 0x45, 0x4a, 0x45, 0x43, 0x54, 0x45, 0x44, 0x10, 0x11, 0x42, 0x07, 0x5a,
-	0x05, 0x2e, 0x2f, 0x61, 0x70, 0x69, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x44, 0x45, 0x5f, 0x52, 0x45, 0x4a, 0x45, 0x43, 0x54, 0x45, 0x44, 0x10, 0x11, 0x12, 0x16, 0x0a,
+	0x12, 0x4f, 0x50, 0x43, 0x4f, 0x44, 0x45, 0x5f, 0x43, 0x48, 0x4f, 0x4f, 0x53, 0x45, 0x5f, 0x43,
+	0x41, 0x52, 0x44, 0x10, 0x12, 0x12, 0x0f, 0x0a, 0x0b, 0x4f, 0x50, 0x43, 0x4f, 0x44, 0x45, 0x5f,
+	0x49, 0x4e, 0x46, 0x4f, 0x10, 0x13, 0x12, 0x0f, 0x0a, 0x0b, 0x4f, 0x50, 0x43, 0x4f, 0x44, 0x45,
+	0x5f, 0x54, 0x49, 0x43, 0x4b, 0x10, 0x14, 0x42, 0x07, 0x5a, 0x05, 0x2e, 0x2f, 0x61, 0x70, 0x69,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1404,7 +1492,7 @@ func file_api_coupapi_proto_rawDescGZIP() []byte {
 }
 
 var file_api_coupapi_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_api_coupapi_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_api_coupapi_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_api_coupapi_proto_goTypes = []interface{}{
 	(Role)(0),                    // 0: api.Role
 	(State)(0),                   // 1: api.State
@@ -1412,37 +1500,40 @@ var file_api_coupapi_proto_goTypes = []interface{}{
 	(*PlayerInfo)(nil),           // 3: api.PlayerInfo
 	(*Card)(nil),                 // 4: api.Card
 	(*Start)(nil),                // 5: api.Start
-	(*Update)(nil),               // 6: api.Update
-	(*Done)(nil),                 // 7: api.Done
-	(*ReadyToStart)(nil),         // 8: api.ReadyToStart
-	(*Question)(nil),             // 9: api.Question
-	(*GetCoin)(nil),              // 10: api.GetCoin
-	(*Discard)(nil),              // 11: api.Discard
-	(*StealCoins)(nil),           // 12: api.StealCoins
-	(*ChangeSingleCard)(nil),     // 13: api.ChangeSingleCard
-	(*DenyAssassin)(nil),         // 14: api.DenyAssassin
-	(*DenyMoney)(nil),            // 15: api.DenyMoney
-	(*DenySteal)(nil),            // 16: api.DenySteal
+	(*Tick)(nil),                 // 6: api.Tick
+	(*Info)(nil),                 // 7: api.Info
+	(*Update)(nil),               // 8: api.Update
+	(*Done)(nil),                 // 9: api.Done
+	(*ReadyToStart)(nil),         // 10: api.ReadyToStart
+	(*Question)(nil),             // 11: api.Question
+	(*GetCoin)(nil),              // 12: api.GetCoin
+	(*Discard)(nil),              // 13: api.Discard
+	(*StealCoins)(nil),           // 14: api.StealCoins
+	(*ChangeCard)(nil),           // 15: api.ChangeCard
+	(*Deny)(nil),                 // 16: api.Deny
 	(*Assassin)(nil),             // 17: api.Assassin
 	(*Coup)(nil),                 // 18: api.Coup
-	(*RpcFindMatchRequest)(nil),  // 19: api.RpcFindMatchRequest
-	(*RpcFindMatchResponse)(nil), // 20: api.RpcFindMatchResponse
-	nil,                          // 21: api.Start.PlayerInfosEntry
-	nil,                          // 22: api.Update.PlayerInfosEntry
+	(*ChangeCardRequest)(nil),    // 19: api.ChangeCardRequest
+	(*ChangeCardResponse)(nil),   // 20: api.ChangeCardResponse
+	(*RpcFindMatchRequest)(nil),  // 21: api.RpcFindMatchRequest
+	(*RpcFindMatchResponse)(nil), // 22: api.RpcFindMatchResponse
+	nil,                          // 23: api.Start.PlayerInfosEntry
+	nil,                          // 24: api.Update.PlayerInfosEntry
 }
 var file_api_coupapi_proto_depIdxs = []int32{
 	4,  // 0: api.PlayerInfo.cards:type_name -> api.Card
 	1,  // 1: api.PlayerInfo.state:type_name -> api.State
 	0,  // 2: api.Card.role:type_name -> api.Role
-	21, // 3: api.Start.playerInfos:type_name -> api.Start.PlayerInfosEntry
-	22, // 4: api.Update.playerInfos:type_name -> api.Update.PlayerInfosEntry
-	3,  // 5: api.Start.PlayerInfosEntry.value:type_name -> api.PlayerInfo
-	3,  // 6: api.Update.PlayerInfosEntry.value:type_name -> api.PlayerInfo
-	7,  // [7:7] is the sub-list for method output_type
-	7,  // [7:7] is the sub-list for method input_type
-	7,  // [7:7] is the sub-list for extension type_name
-	7,  // [7:7] is the sub-list for extension extendee
-	0,  // [0:7] is the sub-list for field type_name
+	23, // 3: api.Start.playerInfos:type_name -> api.Start.PlayerInfosEntry
+	24, // 4: api.Update.playerInfos:type_name -> api.Update.PlayerInfosEntry
+	4,  // 5: api.ChangeCardRequest.cards:type_name -> api.Card
+	3,  // 6: api.Start.PlayerInfosEntry.value:type_name -> api.PlayerInfo
+	3,  // 7: api.Update.PlayerInfosEntry.value:type_name -> api.PlayerInfo
+	8,  // [8:8] is the sub-list for method output_type
+	8,  // [8:8] is the sub-list for method input_type
+	8,  // [8:8] is the sub-list for extension type_name
+	8,  // [8:8] is the sub-list for extension extendee
+	0,  // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_api_coupapi_proto_init() }
@@ -1488,7 +1579,7 @@ func file_api_coupapi_proto_init() {
 			}
 		}
 		file_api_coupapi_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Update); i {
+			switch v := v.(*Tick); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1500,7 +1591,7 @@ func file_api_coupapi_proto_init() {
 			}
 		}
 		file_api_coupapi_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Done); i {
+			switch v := v.(*Info); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1512,7 +1603,7 @@ func file_api_coupapi_proto_init() {
 			}
 		}
 		file_api_coupapi_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ReadyToStart); i {
+			switch v := v.(*Update); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1524,7 +1615,7 @@ func file_api_coupapi_proto_init() {
 			}
 		}
 		file_api_coupapi_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Question); i {
+			switch v := v.(*Done); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1536,7 +1627,7 @@ func file_api_coupapi_proto_init() {
 			}
 		}
 		file_api_coupapi_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetCoin); i {
+			switch v := v.(*ReadyToStart); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1548,7 +1639,7 @@ func file_api_coupapi_proto_init() {
 			}
 		}
 		file_api_coupapi_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Discard); i {
+			switch v := v.(*Question); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1560,7 +1651,7 @@ func file_api_coupapi_proto_init() {
 			}
 		}
 		file_api_coupapi_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*StealCoins); i {
+			switch v := v.(*GetCoin); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1572,7 +1663,7 @@ func file_api_coupapi_proto_init() {
 			}
 		}
 		file_api_coupapi_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ChangeSingleCard); i {
+			switch v := v.(*Discard); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1584,7 +1675,7 @@ func file_api_coupapi_proto_init() {
 			}
 		}
 		file_api_coupapi_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DenyAssassin); i {
+			switch v := v.(*StealCoins); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1596,7 +1687,7 @@ func file_api_coupapi_proto_init() {
 			}
 		}
 		file_api_coupapi_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DenyMoney); i {
+			switch v := v.(*ChangeCard); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1608,7 +1699,7 @@ func file_api_coupapi_proto_init() {
 			}
 		}
 		file_api_coupapi_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DenySteal); i {
+			switch v := v.(*Deny); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1644,7 +1735,7 @@ func file_api_coupapi_proto_init() {
 			}
 		}
 		file_api_coupapi_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RpcFindMatchRequest); i {
+			switch v := v.(*ChangeCardRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1656,6 +1747,30 @@ func file_api_coupapi_proto_init() {
 			}
 		}
 		file_api_coupapi_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ChangeCardResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_api_coupapi_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*RpcFindMatchRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_api_coupapi_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*RpcFindMatchResponse); i {
 			case 0:
 				return &v.state
@@ -1674,7 +1789,7 @@ func file_api_coupapi_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_api_coupapi_proto_rawDesc,
 			NumEnums:      3,
-			NumMessages:   20,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

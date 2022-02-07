@@ -1,27 +1,28 @@
 package service
 
 import (
-	"context"
+	"fmt"
 
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
+	"github.com/xcxcx1996/coup/global"
 	"github.com/xcxcx1996/coup/model"
 )
 
-func (serv *MatchService) Coup(ctx context.Context, dispatcher runtime.MatchDispatcher, state *model.MatchState, message runtime.MatchData) {
+func (serv *MatchService) Coup(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) {
 	msg := &api.Coup{}
-	err := serv.Unmarshaler.Unmarshal(message.GetData(), msg)
 
-	if err != nil {
+	myTurn := message.GetUserId() == state.CurrentPlayerID
+
+	err := global.Unmarshaler.Unmarshal(message.GetData(), msg)
+	if err != nil || !myTurn {
 		// Client sent bad data.
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, nil, nil, true)
+		return
 	}
-
-	cards := state.PlayerInfos[msg.PlayerId].Cards
-	for i, c := range cards {
-		if c.Id == msg.CardId {
-			cards = append(cards[:i], cards[i+1:]...)
-		}
-	}
-	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_ASSASSIN), nil, []runtime.Presence{message}, nil, true)
+	// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_COUP), nil, nil, nil, true)
+	state.EnterDicardState(msg.PlayerId)
+	info := fmt.Sprintf("%v 对%v发动政变", message.GetUsername(), state.GetPlayerNameByID(msg.PlayerId))
+	buf, _ := global.Marshaler.Marshal(&api.Info{Info: info})
+	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
 }

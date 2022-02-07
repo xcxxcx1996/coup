@@ -1,80 +1,101 @@
 package service
 
 import (
-	"context"
+	"log"
 
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
+	"github.com/xcxcx1996/coup/global"
 	"github.com/xcxcx1996/coup/model"
-	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
-type MatchService struct {
-	Marshaler   *protojson.MarshalOptions
-	Unmarshaler *protojson.UnmarshalOptions
+type MatchService struct{}
 
-	// LastAction int
-	// Time       int
-}
-
-func (serv *MatchService) Next(ctx context.Context, dispatcher runtime.MatchDispatcher, state *model.MatchState, message runtime.MatchData) {
-	//对应的actionID
-	switch state.Actions.Last().ActionID {
+func (serv *MatchService) Dispatch(message runtime.MatchData, state *model.MatchState, dispatcher runtime.MatchDispatcher) {
+	switch message.GetOpCode() {
+	// 刺客刺杀
 	case int64(api.OpCode_OPCODE_ASSASSIN):
-		serv.CompleteAssassin(ctx, dispatcher, state, message)
+		action := Assassin{}
+		action.Start(dispatcher, message, state)
+	// 大使换牌
 	case int64(api.OpCode_OPCODE_CHANGE_CARD):
-		serv.CompleteChangeCard(ctx, dispatcher, state, message)
-	case int64(api.OpCode_OPCODE_DENY_STEAL):
-		serv.ContinueAssassin(ctx, dispatcher, state, message)
+		action := ChangeCard{}
+		action.Start(dispatcher, message, state)
+	// 大使选牌
+	case int64(api.OpCode_OPCODE_CHOOSE_CARD):
+		serv.CompleteChangeCard(dispatcher, message, state)
+	// 政变
+	case int64(api.OpCode_OPCODE_COUP):
+		serv.Coup(dispatcher, message, state)
+	// 女王阻止刺杀
 	case int64(api.OpCode_OPCODE_DENY_KILL):
-		serv.ContinueAssassin(ctx, dispatcher, state, message)
-	case int64(api.OpCode_OPCODE_DRAW_COINS):
-		serv.ContinueAssassin(ctx, dispatcher, state, message)
+		action := DenyAssassian{}
+		action.Start(dispatcher, message, state)
+	// 男爵阻止拿牌
 	case int64(api.OpCode_OPCODE_DENY_MONEY):
-		serv.ContinueAssassin(ctx, dispatcher, state, message)
+		action := DenyMoney{}
+		action.Start(dispatcher, message, state)
+	// 男爵拿钱
+	case int64(api.OpCode_OPCODE_DRAW_THREE_COINS):
+		action := DrawThreeCoins{}
+		action.Start(dispatcher, message, state)
+	//偷钱
+	case int64(api.OpCode_OPCODE_STEAL_COINS):
+		action := Steal{}
+		action.Start(dispatcher, message, state)
+	//阻止偷钱
+	case int64(api.OpCode_OPCODE_DENY_STEAL):
+		action := DenySteal{}
+		action.Start(dispatcher, message, state)
+	// 普通玩家拿牌
+	case int64(api.OpCode_OPCODE_DRAW_COINS):
+		action := DrawCoin{}
+		action.Start(dispatcher, message, state)
+	// 普通玩家弃牌
+	case int64(api.OpCode_OPCODE_DISCARD):
+		serv.Discard(dispatcher, message, state)
+	// 普通玩家质疑
+	case int64(api.OpCode_OPCODE_QUESTION):
+		serv.Questioning(dispatcher, message, state)
 	default:
 	}
-	if state.IsActionComplete {
-		serv.NextTurn(state)
-	}
+	var opCode api.OpCode
+	var outgoingMsg proto.Message
 
-	//下一个回合
+	opCode = api.OpCode_OPCODE_UPDATE
+	outgoingMsg = &api.Update{
+		PlayerInfos:     state.PlayerInfos,
+		CurrentPlayerId: state.CurrentPlayerID,
+		Message:         "update",
+	}
+	buf, err := global.Marshaler.Marshal(outgoingMsg)
+	if err != nil {
+		log.Printf("error encoding message: %v", err)
+	} else {
+		_ = dispatcher.BroadcastMessage(int64(opCode), buf, nil, nil, true)
+	}
+}
+func (serv *MatchService) DefaultAction(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
+	var message DefaultActionData
+	if state.IsQuestion {
+		data, _ := global.Marshaler.Marshal(&api.Question{IsQuestion: false})
+		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_QUESTION), Data: data, Presence: state.Presences[state.Currentquestioner]}
+
+	} else if state.IsDeny {
+		data, _ := global.Marshaler.Marshal(&api.Deny{IsDeny: false})
+		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DENY_KILL), Data: data, Presence: state.Presences[state.CurrentDenyer]}
+	} else if state.IsDiscard {
+		data, _ := global.Marshaler.Marshal(&api.Discard{CardId: state.PlayerInfos[state.CurrentDiscarder].Cards[0].Id})
+		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DRAW_COINS), Data: data, Presence: state.Presences[state.CurrentDiscarder]}
+
+	} else {
+		data, _ := global.Marshaler.Marshal(&api.GetCoin{Coins: 1})
+		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DRAW_COINS), Data: data, Presence: state.Presences[state.CurrentPlayerID]}
+	}
+	serv.Dispatch(message, state, dispatcher)
 }
 
 func New() (s *MatchService) {
-	marshaler := &protojson.MarshalOptions{
-		UseEnumNumbers: true,
-	}
-	unmarshaler := &protojson.UnmarshalOptions{
-		DiscardUnknown: false,
-	}
-	return &MatchService{
-		Marshaler:   marshaler,
-		Unmarshaler: unmarshaler,
-	}
-}
-
-func (serv *MatchService) NextTurn(state *model.MatchState) {
-	var nextPlayer string
-	for i, p := range state.PlayerSequence {
-		if state.CurrentPlayerID == p {
-			nextPlayer = state.PlayerSequence[(i+1)%len(state.PlayerSequence)]
-		}
-	}
-	for _, p := range state.PlayerInfos {
-		if nextPlayer == p.Id {
-			p.State = api.State_START
-		} else {
-			p.State = api.State_IDLE
-		}
-	}
-}
-
-func (serv *MatchService) GetNextPlayer(playerID string, state *model.MatchState) (nextPlayer string) {
-	for i, p := range state.PlayerSequence {
-		if playerID == p {
-			nextPlayer = state.PlayerSequence[(i+1)%len(state.PlayerSequence)]
-		}
-	}
-	return
+	return &MatchService{}
 }
