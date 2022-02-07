@@ -64,7 +64,7 @@ export const GameContextProvider: FC = ({ children }) => {
     const [shouldDiscard, setShouldDiscard] = useState(false);
     useEffect(() => {
         nakamaClient.socket.onmatchdata = (matchData: MatchData) => {
-            // console.log("-> matchData", matchData);
+            console.log("-> matchData", matchData);
             const playerInfos: PlayerInfo = matchData.data.playerInfos;
             const currentPlayerId: string = matchData.data.currentPlayerId;
             switch (matchData.op_code) {

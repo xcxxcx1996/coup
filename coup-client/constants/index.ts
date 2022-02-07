@@ -1,9 +1,10 @@
 export enum ROLES {
-    DIPLOMAT = 0,
-    QUEEN = 1,
-    CAPTAIN = 2,
-    ASSASSIN = 3,
-    BARON = 4,
+    UNROLE = 0,
+    DIPLOMAT = 1,
+    QUEEN = 2,
+    CAPTAIN = 3,
+    ASSASSIN = 4,
+    BARON = 5,
 }
 
 export const rolesMap: { [role: string]: string } = {

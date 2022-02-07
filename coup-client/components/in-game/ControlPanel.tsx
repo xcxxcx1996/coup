@@ -169,7 +169,6 @@ export const AbilityDialog = (props: AbilityProps) => {
 export const ControlPanel = () => {
     const [open, setOpen] = useState(false);
     const { users, shouldDiscard, cards } = useContext(gameContext);
-    console.log("-> shouldDiscard", shouldDiscard);
     const handleClose = () => {
         setOpen(false);
     };
