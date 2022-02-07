@@ -91,11 +91,19 @@ enum OpCode {
     OPCODE_COUP=14;
     // OPCODE_DRAW_THREE_COINS=10;
     OPCODE_READY_START=15;
+    // 更新
     OPCODE_UPDATE=16;
+    // 错误
     OPCODE_REJECTED=17;
+    // 选择卡牌
     OPCODE_CHOOSE_CARD=18;
+    // 操作信息
     OPCODE_INFO=19;
+    // 倒计时
     OPCODE_TICK=20;
+    // 淘汰
+    OPCODE_DEAD=21;
+    
 }
 
 message PlayerInfo{
@@ -149,6 +157,7 @@ message Update {
 
 // todo 比赛结束 
 message Done {
+    PlayerInfo winner=1; 
 }
 // 准备开始
 message ReadyToStart{
@@ -164,12 +173,11 @@ message Deny{
 
 // 获取金币 1块？2块
 message GetCoin{
-    int32 coins=2;
+    int32 coins=1;
 }
 // 弃牌
 message Discard{
-    string player_id=1;
-    string card_id=2;
+    string card_id=1;
 }
 // 偷牌 被偷的玩家id
 message StealCoins{
@@ -200,7 +208,9 @@ message ChangeCardRequest{
 message ChangeCardResponse{
     repeated string cards=1; 
 }
-
+message Dead{
+    PlayerInfo player=1;
+}
 // Payload for an RPC request to find a match.
 message RpcFindMatchRequest {
     // // User can choose a fast or normal speed match.

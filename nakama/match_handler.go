@@ -199,16 +199,17 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 		}
 		// Check if enough time has passed since the last game.
 		if s.NextGameRemainingTicks > 0 {
-			logger.Info("倒计时:%v", s.NextGameRemainingTicks/tickRate)
-			s.NextGameRemainingTicks--
-			buf, err := global.Marshaler.Marshal(&api.ReadyToStart{
-				NextGameStart: s.NextGameRemainingTicks / tickRate,
-			})
-			if err != nil {
-				logger.Error("error encoding message: %v", err)
-			} else {
-				_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_READY_START), buf, nil, nil, true)
+			if s.DeadlineRemainingTicks%tickRate == 0 {
+				buf, err := global.Marshaler.Marshal(&api.ReadyToStart{
+					NextGameStart: s.NextGameRemainingTicks / tickRate,
+				})
+				if err != nil {
+					logger.Error("error encoding message: %v", err)
+				} else {
+					_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_READY_START), buf, nil, nil, true)
+				}
 			}
+			s.NextGameRemainingTicks--
 			return s
 		}
 
@@ -230,7 +231,7 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 	if s.Playing {
 		s.DeadlineRemainingTicks--
 		if s.DeadlineRemainingTicks%tickRate == 0 {
-			logger.Info("tick:%v", s.DeadlineRemainingTicks%tickRate)
+			logger.Info("tick:%v", s.DeadlineRemainingTicks/tickRate)
 			buf, _ := global.Marshaler.Marshal(&api.Tick{Deadline: s.DeadlineRemainingTicks / tickRate})
 			_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_TICK), buf, nil, nil, true)
 		}
@@ -238,7 +239,7 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 			// The player has run out of time to submit their move.
 			s.DeadlineRemainingTicks = int64(50)
 			log.Println("回合到了")
-			// serv.Discard()
+			serv.DefaultAction(dispatcher, s)
 		}
 	}
 	return s
