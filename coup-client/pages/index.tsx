@@ -8,8 +8,8 @@ import { MatchData } from "@heroiclabs/nakama-js/socket";
 import { OP_CODE } from "../constants/op_code";
 
 const Home: NextPage = () => {
-    const [name, setName] = useState("");
-    const [disableUsername, setDisableUsername] = useState(false);
+    const [email, setEmail] = useState("");
+    const [disableEmail, setDisableEmail] = useState(false);
     const [counter, setCounter] = useState(0);
     const router = useRouter();
     const matchDataHandler = useCallback(
@@ -30,10 +30,10 @@ const Home: NextPage = () => {
     }, [matchDataHandler, setCounter]);
 
     useEffect(() => {
-        const user = nakamaClient.getUser();
-        if (user) {
-            setName(user.username as string);
-            setDisableUsername(true);
+        const email = nakamaClient.getUserEmail();
+        if (email) {
+            setEmail(email);
+            setDisableEmail(true);
         }
     }, []);
 
@@ -48,11 +48,11 @@ const Home: NextPage = () => {
     const handleChange = (
         e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
     ) => {
-        setName(e.target.value);
+        setEmail(e.target.value);
     };
     const handleClick = async () => {
         try {
-            await nakamaClient.authenticate(name);
+            await nakamaClient.authenticate(email);
             await nakamaClient.findMatch();
             // await router.push("in-game");
         } catch (e) {
@@ -67,16 +67,17 @@ const Home: NextPage = () => {
                 <div className={styles.grid}>
                     <Input
                         sx={{ mt: 3 }}
-                        value={name}
-                        placeholder="输入用户名"
+                        value={email}
+                        placeholder="输入邮箱"
                         onChange={handleChange}
-                        disabled={disableUsername}
+                        disabled={disableEmail}
+                        error={!!email && !email.includes("@")}
                     />
                     <Button
                         sx={{ width: "120px", m: 1 }}
                         variant="contained"
                         onClick={handleClick}
-                        disabled={!name}
+                        disabled={!email || !email.includes("@")}
                     >
                         加入比赛
                     </Button>

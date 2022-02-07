@@ -15,7 +15,7 @@ export function Header() {
             }}
         >
             <div>{currentPlayer}的回合</div>
-            <div>回合时间: {timeLeft}s</div>
+            {/*<div>回合时间: {timeLeft}s</div>*/}
         </Box>
     );
 }

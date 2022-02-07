@@ -1,36 +1,61 @@
 import { Client, Session, Socket } from "@heroiclabs/nakama-js";
-import { v4 as uuidv4 } from "uuid";
 import { OP_CODE } from "../constants/op_code";
-import { MatchData } from "@heroiclabs/nakama-js/socket";
+
+const saveInStorage = (key: string, value: string): void => {
+    localStorage.setItem(key, value);
+};
+
+const retrieveInStorage = (key: string): string => {
+    return localStorage.getItem(key);
+};
 
 class Nakama {
     private client: Client = new Client("defaultkey", "localhost", "7350");
-    private session: Session;
+    public session: Session;
     private useSSL: boolean = false;
     public socket: Socket = this.client.createSocket(this.useSSL, false);
     private matchID: any;
+    private password: string = "password123";
     constructor() {}
 
-    async authenticate(username: string) {
-        let deviceId = localStorage.getItem("deviceId");
-        let create = false;
-        if (!deviceId) {
-            deviceId = uuidv4();
-            localStorage.setItem("deviceId", deviceId);
-            create = true;
-        }
-        this.session = await this.client.authenticateDevice(
-            deviceId,
-            create,
-            username
+    async authenticate(email: string) {
+        this.session = await this.client.authenticateEmail(
+            email,
+            this.password,
+            true,
+            email.split("@").shift()
         );
-        localStorage.setItem("user_session", JSON.stringify(this.session));
+        const token = this.session.token;
+        const refreshToken = this.session.refresh_token;
+        saveInStorage("email", email);
+        saveInStorage("token", token);
+        saveInStorage("refreshToken", refreshToken);
         await this.socket.connect(this.session, true);
     }
 
-    getUser() {
-        const sessionString = localStorage.getItem("user_session");
-        return sessionString ? JSON.parse(sessionString) : null;
+    reconnect() {
+        const email = retrieveInStorage("email");
+        if (email) {
+            const token = retrieveInStorage("token");
+            const refreshToken = retrieveInStorage("refreshToken");
+            this.session = Session.restore(token, refreshToken);
+            const matchID = retrieveInStorage("matchID");
+            this.socket
+                .connect(this.session, true)
+                .then(() => {
+                    this.socket
+                        .joinMatch(matchID)
+                        .then((result) => {
+                            console.log("-> result", result);
+                        })
+                        .catch((err) => console.log("join failed", err));
+                })
+                .catch((err) => console.log(err));
+        }
+    }
+
+    getUserEmail() {
+        return retrieveInStorage("email");
     }
 
     async findMatch() {
@@ -38,6 +63,7 @@ class Nakama {
         const rpcid = "find_match";
         const matches = await this.client.rpc(this.session, rpcid, {});
         this.matchID = (matches.payload as { matchIds: string[] }).matchIds[0];
+        saveInStorage("matchID", this.matchID);
         await this.socket.joinMatch(this.matchID);
     }
 

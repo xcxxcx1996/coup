@@ -17,6 +17,7 @@ export interface GameContext {
     setUsers: Dispatch<SetStateAction<IUser[]>>;
     currentPlayer: string;
     timeLeft: number;
+    shouldReconnect: boolean;
 }
 
 export const gameContext = createContext<GameContext>({
@@ -24,6 +25,7 @@ export const gameContext = createContext<GameContext>({
     setUsers: null,
     currentPlayer: null,
     timeLeft: null,
+    shouldReconnect: null,
 });
 
 export interface PlayerInfo {
@@ -38,10 +40,11 @@ export const GameContextProvider: FC = ({ children }) => {
     const [users, setUsers] = useState<IUser[]>([]);
     const [currentPlayer, setCurrentPlayer] = useState("");
     const [timeLeft, setTimeLeft] = useState(0);
+    const [shouldReconnect, setShouldReconnect] = useState(false);
     useEffect(() => {
         nakamaClient.socket.onmatchdata = (matchData: MatchData) => {
+            console.log("-> matchData", matchData);
             if (matchData.op_code === OP_CODE.UPDATE) {
-                console.log("-> matchData", matchData);
                 const playerInfos: PlayerInfo = matchData.data.playerInfos;
                 const currentPlayerId = matchData.data.currentPlayerId;
                 const deadline = matchData.data.deadline;
@@ -61,9 +64,23 @@ export const GameContextProvider: FC = ({ children }) => {
         };
     }, []);
 
+    useEffect(() => {
+        if (!nakamaClient.session) {
+            setShouldReconnect(true);
+        } else {
+            setShouldReconnect(false);
+        }
+    }, [nakamaClient.session, setShouldReconnect]);
+
     return (
         <gameContext.Provider
-            value={{ users, setUsers, currentPlayer, timeLeft }}
+            value={{
+                users,
+                setUsers,
+                currentPlayer,
+                timeLeft,
+                shouldReconnect,
+            }}
         >
             {children}
         </gameContext.Provider>

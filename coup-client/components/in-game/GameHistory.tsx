@@ -1,8 +1,14 @@
-import { Box } from "@mui/material";
-import React from "react";
+import { Box, Button } from "@mui/material";
+import React, { useCallback, useContext } from "react";
+import { gameContext } from "../../contexts/gameContext";
+import { nakamaClient } from "../../utils/nakama";
 export interface GameHistoryProps {}
 
 export const GameHistory: React.FC<GameHistoryProps> = ({}) => {
+    const { shouldReconnect } = useContext(gameContext);
+    const handleReconnect = useCallback(() => {
+        nakamaClient.reconnect();
+    }, []);
     return (
         <Box
             sx={{
@@ -16,6 +22,15 @@ export const GameHistory: React.FC<GameHistoryProps> = ({}) => {
                 overflow: "scroll",
             }}
         >
+            {shouldReconnect && (
+                <Button
+                    variant="contained"
+                    color={"error"}
+                    onClick={handleReconnect}
+                >
+                    重连
+                </Button>
+            )}
             Game start!
         </Box>
     );
