@@ -76,22 +76,30 @@ func (serv *MatchService) Dispatch(message runtime.MatchData, state *model.Match
 		_ = dispatcher.BroadcastMessage(int64(opCode), buf, nil, nil, true)
 	}
 }
+
+// 默认行为
 func (serv *MatchService) DefaultAction(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
 	var message DefaultActionData
-	if state.IsQuestion {
+	switch state.State {
+	case api.State_QUESTION:
 		data, _ := global.Marshaler.Marshal(&api.Question{IsQuestion: false})
 		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_QUESTION), Data: data, Presence: state.Presences[state.Currentquestioner]}
-
-	} else if state.IsDeny {
-		data, _ := global.Marshaler.Marshal(&api.Deny{IsDeny: false})
-		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DENY_KILL), Data: data, Presence: state.Presences[state.CurrentDenyer]}
-	} else if state.IsDiscard {
+	case api.State_DISCARD:
 		data, _ := global.Marshaler.Marshal(&api.Discard{CardId: state.PlayerInfos[state.CurrentDiscarder].Cards[0].Id})
 		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DRAW_COINS), Data: data, Presence: state.Presences[state.CurrentDiscarder]}
-
-	} else {
+	case api.State_CHOOSE_CARD:
+		cards := []string{}
+		for _, v := range state.PlayerInfos[state.CurrentDiscarder].Cards {
+			cards = append(cards, v.Id)
+		}
+		data, _ := global.Marshaler.Marshal(&api.ChangeCardResponse{Cards: cards})
+		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_CHOOSE_CARD), Data: data, Presence: state.Presences[state.CurrentDiscarder]}
+	case api.State_START:
 		data, _ := global.Marshaler.Marshal(&api.GetCoin{Coins: 1})
 		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DRAW_COINS), Data: data, Presence: state.Presences[state.CurrentPlayerID]}
+	default:
+		data, _ := global.Marshaler.Marshal(&api.Deny{IsDeny: false})
+		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DENY_KILL), Data: data, Presence: state.Presences[state.CurrentDenyer]}
 	}
 	serv.Dispatch(message, state, dispatcher)
 }

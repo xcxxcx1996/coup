@@ -50,7 +50,6 @@ func (d DenyMoney) Start(dispatcher runtime.MatchDispatcher, message runtime.Mat
 //所有人都不质疑,那么阻止别人拿两块钱
 func (d DenyMoney) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
 
-	state.IsDeny = false
 	// 不质疑删除IAction， 然后assain改为 isdeny
 	info := fmt.Sprintln("阻止成功")
 	buf, _ := global.Marshaler.Marshal(&api.Info{Info: info})

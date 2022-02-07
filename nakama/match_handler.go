@@ -170,8 +170,6 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 		}
 	}
 
-	t := time.Now().UTC()
-
 	// If there's no game in progress check if we can (and should) start one!
 	if !s.Playing {
 		// Between games any disconnected users are purged, there's no in-progress game for them to return to anyway.
@@ -204,7 +202,7 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 			logger.Info("倒计时:%v", s.NextGameRemainingTicks/tickRate)
 			s.NextGameRemainingTicks--
 			buf, err := global.Marshaler.Marshal(&api.ReadyToStart{
-				NextGameStart: t.Add(time.Duration(s.NextGameRemainingTicks/tickRate) * time.Second).Unix(),
+				NextGameStart: s.NextGameRemainingTicks / tickRate,
 			})
 			if err != nil {
 				logger.Error("error encoding message: %v", err)
@@ -240,15 +238,7 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 			// The player has run out of time to submit their move.
 			s.DeadlineRemainingTicks = int64(50)
 			log.Println("回合到了")
-			// 跳过了
-			if s.IsQuestion {
-
-			} else if s.IsDeny {
-
-			} else {
-				s.NextTurn()
-			}
-
+			// serv.Discard()
 		}
 	}
 	return s

@@ -26,11 +26,12 @@ type MatchState struct {
 	// Currently connected users, or reserved spaces.
 	// Number of users currently in the process of connecting to the match.
 	JoinsInProgress int
-	// 质疑环节
-	IsQuestion bool
-	// 阻止环节
-	IsDeny    bool
-	IsDiscard bool
+	// // 质疑环节
+	// IsQuestion bool
+	// // 阻止环节
+	// IsDeny    bool
+	// IsDiscard bool
+	State api.State
 	// True if there's a game currently in progress.
 	Playing bool
 	// CurrentAction   Action
@@ -51,6 +52,7 @@ type MatchState struct {
 //
 func (s *MatchState) EnterQuestion() {
 	//下一个用户进入question状态
+	s.State = api.State_QUESTION
 	nextPlayer := s.GetNextPlayer(s.CurrentPlayerID)
 	s.Currentquestioner = nextPlayer
 	for _, p := range s.PlayerInfos {
@@ -78,6 +80,7 @@ func (s *MatchState) NextQuestionor() (end bool) {
 }
 
 func (s *MatchState) NextTurn() {
+	s.State = api.State_START
 	var nextPlayer string
 	for i, p := range s.PlayerSequence {
 		if s.CurrentPlayerID == p {
@@ -104,6 +107,7 @@ func (s *MatchState) GetNextPlayer(playerID string) (nextPlayer string) {
 
 // 指定玩家进入弃牌阶段
 func (s *MatchState) EnterDicardState(playerID string) {
+	s.State = api.State_DISCARD
 	//下一个用户进入question状态
 	for _, p := range s.PlayerInfos {
 		if playerID == p.Id {
@@ -116,6 +120,7 @@ func (s *MatchState) EnterDicardState(playerID string) {
 }
 
 func (s *MatchState) EnterChooseCard() {
+	s.State = api.State_CHOOSE_CARD
 	for _, p := range s.PlayerInfos {
 		if s.CurrentPlayerID == p.Id {
 			p.State = api.State_CHOOSE_CARD
@@ -127,7 +132,7 @@ func (s *MatchState) EnterChooseCard() {
 
 // 指定玩家可以阻止自我刺杀
 func (s *MatchState) EnterDenyAssassin(playerID string) {
-	s.IsDeny = true
+	s.State = api.State_DENY_ASSASSIN
 	for _, p := range s.PlayerInfos {
 		if playerID == p.Id {
 			p.State = api.State_DENY_ASSASSIN
@@ -139,7 +144,7 @@ func (s *MatchState) EnterDenyAssassin(playerID string) {
 
 // 指定玩家阻止偷钱
 func (s *MatchState) EnterDenySteal(playerID string) {
-	s.IsDeny = true
+	s.State = api.State_DENY_STEAL
 	for _, p := range s.PlayerInfos {
 		if playerID == p.Id {
 			p.State = api.State_DENY_STEAL
@@ -151,7 +156,7 @@ func (s *MatchState) EnterDenySteal(playerID string) {
 
 // 指定玩家阻止玩家偷钱，我有公爵，你不准拿钱！
 func (s *MatchState) EnterDenyMoney() {
-	s.IsDeny = true
+	s.State = api.State_DENY_MONEY
 	nextPlayer := s.GetNextPlayer(s.CurrentPlayerID)
 	s.CurrentDenyer = nextPlayer
 	for _, p := range s.PlayerInfos {
@@ -165,7 +170,6 @@ func (s *MatchState) EnterDenyMoney() {
 func (s *MatchState) NextDenyer() (end bool) {
 	nextPlayer := s.GetNextPlayer(s.CurrentDenyer)
 	if nextPlayer == s.CurrentPlayerID {
-		s.IsDeny = false
 		return true
 	}
 	for _, p := range s.PlayerInfos {
