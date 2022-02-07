@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
 import Carousel from "react-material-ui-carousel";
-import { useContext } from "react";
+import { memo, useContext } from "react";
 import { gameContext } from "../../contexts/gameContext";
 
 export interface IUser {
@@ -8,10 +8,6 @@ export interface IUser {
     name: string;
     coins: number;
     roles: string[];
-}
-
-export interface UserCarouselProps {
-    users: IUser[];
 }
 
 export interface UserInfoProps {
@@ -40,8 +36,12 @@ export function UserInfo(props: UserInfoProps) {
     );
 }
 
-export function UserCarousel() {
+export const UserCarousel = () => {
     const { users } = useContext(gameContext);
+    return <Users users={users} />;
+};
+
+const Users = memo(({ users }: { users: IUser[] }) => {
     return (
         <Box
             sx={{
@@ -60,4 +60,4 @@ export function UserCarousel() {
             </Carousel>
         </Box>
     );
-}
+});

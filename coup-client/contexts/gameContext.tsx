@@ -70,11 +70,12 @@ export const GameContextProvider: FC = ({ children }) => {
     useEffect(() => {
         nakamaClient.socket.onmatchdata = (matchData: MatchData) => {
             console.log("-> matchData", matchData);
-            const playerInfos: PlayerInfo = matchData.data.playerInfos;
-            const currentPlayerId: string = matchData.data.currentPlayerId;
             switch (matchData.op_code) {
                 case OP_CODE.START:
                 case OP_CODE.UPDATE:
+                    const playerInfos: PlayerInfo = matchData.data.playerInfos;
+                    const currentPlayerId: string =
+                        matchData.data.currentPlayerId;
                     setUsers(transformPlayerInfos(playerInfos));
                     setCards(playerInfos[currentPlayerId].cards);
                     setCurrentPlayer(playerInfos[currentPlayerId].name);
