@@ -96,6 +96,7 @@ func (s *MatchState) NextTurn() {
 			p.State = api.State_IDLE
 		}
 	}
+	s.CurrentPlayerID = nextPlayer
 }
 
 func (s *MatchState) GetNextPlayer(playerID string) (nextPlayer string) {
