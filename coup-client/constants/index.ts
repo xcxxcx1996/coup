@@ -13,4 +13,5 @@ export const rolesMap: { [role: string]: string } = {
     [ROLES.BARON]: "男爵",
     [ROLES.ASSASSIN]: "刺客",
     [ROLES.CAPTAIN]: "队长",
+    [ROLES.UNROLE]: "未知",
 };

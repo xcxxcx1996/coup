@@ -14,6 +14,7 @@ const Home: NextPage = () => {
     const router = useRouter();
     const matchDataHandler = useCallback(
         (matchData: MatchData) => {
+            console.log("-> start matchData", matchData);
             if (matchData.op_code === OP_CODE.READY_START) {
                 const nextGameStart = matchData.data.nextGameStart;
                 setCounter(parseInt(nextGameStart));
