@@ -10,6 +10,7 @@ import (
 // 玩家选择完牌后，发送choose，然后服务器换牌
 func (serv *MatchService) CompleteChangeCard(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) {
 	//更换牌
+
 	myTurn := message.GetUserId() == state.CurrentPlayerID
 
 	msg := &api.ChangeCardResponse{}

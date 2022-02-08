@@ -29,6 +29,7 @@ func (d DenyAssassian) Start(dispatcher runtime.MatchDispatcher, message runtime
 	if !msg.IsDeny {
 		ass, _ := state.Actions.Pop()
 		ass.AfterDeny(dispatcher, state)
+		return
 	}
 	// 阻止
 	action, _ := state.Actions.Last()
@@ -39,9 +40,11 @@ func (d DenyAssassian) Start(dispatcher runtime.MatchDispatcher, message runtime
 
 	state.Actions.Push(d)
 
-	info := fmt.Sprintln("我有女王")
-	buf, _ := global.Marshaler.Marshal(&api.Info{Info: info})
-	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+	info := fmt.Sprintf("%v claim the queen, want to stop the kill", message.GetUsername())
+	SendNotification(info, dispatcher)
+
+	// buf, _ := global.Marshaler.Marshal(&api.ActionInfo{Message: info})
+	// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
 	// question状态
 	state.EnterQuestion()
 }
@@ -53,9 +56,11 @@ func (d DenyAssassian) AfterQuestion(dispatcher runtime.MatchDispatcher, state *
 	action, _ := state.Actions.Last()
 	action.(Assassin).Stop(dispatcher, state)
 	// ass.IsDeny = true
-	info := fmt.Sprintln("质疑结束，阻止刺杀")
-	buf, _ := global.Marshaler.Marshal(&api.Info{Info: info})
-	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+	info := fmt.Sprintln("question end, assassin was stopped")
+	SendNotification(info, dispatcher)
+
+	// buf, _ := global.Marshaler.Marshal(&api.ActionInfo{Message: info})
+	// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
 }
 
 //
@@ -64,9 +69,11 @@ func (d DenyAssassian) AfterDeny(dispatcher runtime.MatchDispatcher, state *mode
 
 // 被质疑成功
 func (d DenyAssassian) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
-	info := fmt.Sprintln("阻止刺杀行动被停止，继续刺杀")
-	buf, _ := global.Marshaler.Marshal(&api.Info{Info: info})
-	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+	info := fmt.Sprintln("deny end, assassin excute")
+	SendNotification(info, dispatcher)
+
+	// buf, _ := global.Marshaler.Marshal(&api.ActionInfo{Message: info})
+	// _ = dispatchedr.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
 	state.Actions.Pop()
 	action, _ := state.Actions.Last()
 	action.AfterDeny(dispatcher, state)

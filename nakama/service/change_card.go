@@ -28,9 +28,11 @@ func (c ChangeCard) Start(dispatcher runtime.MatchDispatcher, message runtime.Ma
 	c.message = message
 	state.Actions.Push(c)
 
-	info := fmt.Sprintf("%v宣称大使，想要换牌", message.GetUsername())
-	buf, _ := global.Marshaler.Marshal(&api.Info{Info: info})
-	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+	info := fmt.Sprintf("%v claims the diplomat, want to change the card", message.GetUsername())
+	SendNotification(info, dispatcher)
+
+	// buf, _ := global.Marshaler.Marshal(&api.ActionInfo{Message: info})
+	// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
 
 	// question状态
 	state.EnterQuestion()
@@ -47,9 +49,11 @@ func (c ChangeCard) AfterQuestion(dispatcher runtime.MatchDispatcher, state *mod
 	} else {
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_CHOOSE_CARD), buf, []runtime.Presence{c.message}, nil, true)
 	}
-	info := fmt.Sprintln("质疑结束，玩家开始换牌")
-	buf, _ = global.Marshaler.Marshal(&api.Info{Info: info})
-	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+	info := fmt.Sprintln("question end, enter choose card")
+	SendNotification(info, dispatcher)
+
+	// buf, _ = global.Marshaler.Marshal(&api.ActionInfo{Message: info})
+	// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
 	state.EnterChooseCard()
 	state.Actions.Pop()
 }
@@ -61,9 +65,11 @@ func (c ChangeCard) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.M
 
 // 被质疑成功，停止
 func (c ChangeCard) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
-	info := fmt.Sprintln("换牌被阻止")
-	buf, _ := global.Marshaler.Marshal(&api.Info{Info: info})
-	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+	info := fmt.Sprintln("change card was stoped")
+	SendNotification(info, dispatcher)
+
+	// buf, _ := global.Marshaler.Marshal(&api.ActionInfo{Message: info})
+	// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
 	state.Actions.Pop()
 	state.NextTurn()
 }

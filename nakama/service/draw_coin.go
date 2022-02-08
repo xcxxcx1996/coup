@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/heroiclabs/nakama-common/runtime"
@@ -31,20 +32,14 @@ func (a DrawCoin) Start(dispatcher runtime.MatchDispatcher, message runtime.Matc
 	state.Actions.Push(a)
 
 	if a.coins == 2 {
+		info := fmt.Sprintf("%v want to gain 2 coins", a.message.GetUsername())
+		SendNotification(info, dispatcher)
 		state.EnterDenyMoney()
 	} else {
+		info := "%v want to gain 1 coins"
+		SendNotification(info, dispatcher)
 		a.AfterDeny(dispatcher, state)
 	}
-	// var buf []byte
-	// // question状态
-	// if a.coins == 2 {
-	// 	buf, _ = global.Marshaler.Marshal(&api.Info{Info: fmt.Sprintf("%v想拿2块钱", state.CurrentPlayerID)})
-	// 	state.EnterDenyMoney()
-	// } else {
-	// 	buf, _ = global.Marshaler.Marshal(&api.Info{Info: fmt.Sprintf("%v想拿1块钱", state.CurrentPlayerID)})
-	// }
-	// log.Printf("拿钱:%v", buf)
-	// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
 }
 
 // 正常拿钱没有人会质疑，只有公爵阻止,所以不用写
@@ -56,9 +51,11 @@ func (a DrawCoin) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model
 func (a DrawCoin) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
 	state.Actions.Pop()
 	state.PlayerInfos[state.CurrentPlayerID].Coins += int64(a.coins)
-	// info := fmt.Sprintf("%v成功拿了钱", a.message.GetUsername())
-	// buf, _ := global.Marshaler.Marshal(&api.Info{Info: info})
-	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), nil, nil, nil, true)
+	info := fmt.Sprintf("%v success get the coins", a.message.GetUsername())
+	SendNotification(info, dispatcher)
+
+	// buf, _ := global.Marshaler.Marshal(&api.ActionInfo{Message: info})
+	// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
 	state.NextTurn()
 }
 

@@ -28,23 +28,24 @@ func (a Steal) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchDa
 	a.Victim = msg.PlayerId
 	a.Thief = message.GetUserId()
 	state.Actions.Push(a)
-	buf, _ := global.Marshaler.Marshal(&api.Info{Info: fmt.Sprintf("%v 想偷 %v 的金币", message.GetUsername(), state.GetPlayerNameByID(a.Victim))})
-	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true) // question状态
+	info := fmt.Sprintf("%v claims the Captain,want to steal %v 的金币", message.GetUsername(), state.GetPlayerNameByID(a.Victim))
+	SendNotification(info, dispatcher)
+
 	state.EnterQuestion()
 }
 
 // 1. 没人质疑，2. 有人质疑，但失败
 func (a Steal) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
-	info := fmt.Sprintln("质疑结束，开始阻止阶段")
-	buf, _ := global.Marshaler.Marshal(&api.Info{Info: info})
-	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+	info := fmt.Sprintln("question end, enter deny ")
+	SendNotification(info, dispatcher)
+
 	state.EnterDenySteal(a.Victim)
 }
 
 func (a Steal) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
-	info := fmt.Sprintln("阻止结束，开始偷钱")
-	buf, _ := global.Marshaler.Marshal(&api.Info{Info: info})
-	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+	info := fmt.Sprintln("deny end, steal")
+	SendNotification(info, dispatcher)
+
 	coins := state.PlayerInfos[a.Victim].Coins
 	if coins <= 2 {
 		state.PlayerInfos[a.Victim].Coins = 0
@@ -53,16 +54,18 @@ func (a Steal) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.MatchS
 		state.PlayerInfos[a.Victim].Coins -= 2
 		state.PlayerInfos[state.CurrentPlayerID].Coins += 2
 	}
+	state.Actions.Pop()
+	state.NextTurn()
 }
 
 func (a Steal) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
-	info := fmt.Sprintln("偷钱行为被停止")
-	buf, _ := global.Marshaler.Marshal(&api.Info{Info: info})
-	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+	info := fmt.Sprintln("steal was stoped")
+	SendNotification(info, dispatcher)
+
 	state.Actions.Pop()
 	state.NextTurn()
 }
 
 func (a Steal) GetRole() api.Role {
-	return api.Role_ASSASSIN
+	return api.Role_CAPTAIN
 }

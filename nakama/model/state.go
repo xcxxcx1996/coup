@@ -37,6 +37,7 @@ type MatchState struct {
 	Playing bool
 	// CurrentAction   Action
 	Actions           Actions
+	ActionComplete    bool
 	CurrentPlayerID   string
 	Currentquestioner string
 	CurrentDiscarder  string
@@ -82,6 +83,7 @@ func (s *MatchState) NextQuestionor() (end bool) {
 }
 
 func (s *MatchState) NextTurn() {
+	s.ActionComplete = false
 	s.State = api.State_START
 	var nextPlayer string
 	for i, p := range s.PlayerSequence {
