@@ -1,11 +1,12 @@
 import { Box, Button, Divider, Theme } from "@mui/material";
-import React, { useCallback, useContext } from "react";
+import React, { useCallback, useContext, useEffect, useRef } from "react";
 import { gameContext } from "../../contexts/gameContext";
 import { nakamaClient } from "../../utils/nakama";
 import { styled } from "@mui/material/styles";
 
 const Root = styled("div")(({ theme }: { theme: Theme }) => ({
     width: "100%",
+    overflow: "scroll",
     ...theme.typography.body2,
     "& > :not(style) + :not(style)": {
         marginTop: theme.spacing(2),
@@ -17,6 +18,16 @@ export const GameHistory = () => {
     const handleReconnect = useCallback(() => {
         nakamaClient.reconnect();
     }, []);
+
+    const infoContainer = useRef(null);
+
+    useEffect(() => {
+        console.log("infoContainer.current", infoContainer.current);
+        const scroll =
+            infoContainer.current.scrollHeight -
+            infoContainer.current.clientHeight;
+        infoContainer.current.scrollTo(0, scroll);
+    }, [infos]);
 
     return (
         <Box
@@ -40,7 +51,7 @@ export const GameHistory = () => {
                     重连
                 </Button>
             )}
-            <Root>
+            <Root ref={infoContainer}>
                 {infos.map((info, index) => (
                     <div key={index}>
                         {info}

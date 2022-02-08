@@ -147,6 +147,7 @@ export const AbilityDialog = (props: AbilityProps) => {
     const { users, client } = useContext(gameContext);
     const clientState = client.state;
     const isIdle = isStateIdle(clientState);
+    const isStart = isStateStart(clientState);
     const isDenyMoney = isStateDenyMoney(clientState);
     const isDenyAssassin = isStateDenyAssassin(clientState);
     const isDenySteal = isStateDenySteal(clientState);
@@ -177,7 +178,7 @@ export const AbilityDialog = (props: AbilityProps) => {
                 <AbilityBtn
                     text="男爵（收3金币）"
                     onClick={handleClick(nakamaClient.drawThreeCoins)}
-                    disabled={isIdle}
+                    disabled={isIdle || !isStart}
                 />
                 <AbilityBtn
                     text="男爵（阻止收2金币）"
@@ -187,7 +188,7 @@ export const AbilityDialog = (props: AbilityProps) => {
                 <AbilityBtn
                     text="大使（换牌）"
                     onClick={handleClick(nakamaClient.changeCard)}
-                    disabled={isIdle}
+                    disabled={isIdle || !isStart}
                 />
                 <AbilityBtn
                     text="大使（阻止偷金币）"
@@ -204,7 +205,7 @@ export const AbilityDialog = (props: AbilityProps) => {
                     }))}
                     btnWidth={250}
                     menuItemWidth={250}
-                    disabled={isIdle}
+                    disabled={isIdle || !isStart}
                 />
                 <AbilityBtn
                     text="队长（阻止偷金币）"
@@ -219,7 +220,7 @@ export const AbilityDialog = (props: AbilityProps) => {
                     }))}
                     btnWidth={250}
                     menuItemWidth={250}
-                    disabled={isIdle}
+                    disabled={isIdle || !isStart}
                 />
             </Box>
         </Dialog>
@@ -263,7 +264,7 @@ export const ControlPanel = () => {
                 sx={{ width: "140px", m: 1 }}
                 variant="contained"
                 onClick={handleClickOpen}
-                disabled={isIdle || !isStart}
+                disabled={isIdle || isQuestion}
             >
                 使用技能
             </Button>

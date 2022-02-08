@@ -15,7 +15,7 @@ import { ROLES, rolesMap } from "../constants";
 export interface GameContext {
     users: IUser[];
     setUsers: Dispatch<SetStateAction<IUser[]>>;
-    currentPlayer: string;
+    currentPlayer: PlayerInfo;
     timeLeft: number;
     shouldReconnect: boolean;
     chooseCards: ICard[];
@@ -67,21 +67,24 @@ export const transformPlayerInfos = (
     }));
 };
 
+const initialPlayer: PlayerInfo = {
+    id: "",
+    coins: 0,
+    cards: [],
+    name: "",
+    state: 0,
+};
+
 export const GameContextProvider: FC = ({ children }) => {
     const [users, setUsers] = useState<IUser[]>([]);
-    const [currentPlayer, setCurrentPlayer] = useState("");
+    const [currentPlayer, setCurrentPlayer] =
+        useState<PlayerInfo>(initialPlayer);
     const [timeLeft, setTimeLeft] = useState(0);
     const [shouldReconnect, setShouldReconnect] = useState(false);
     const [chooseCards, setChooseCards] = useState<ICard[]>([]);
     const [infos, setInfos] = useState<string[]>([]);
-    const [client, setClient] = useState<PlayerInfo>({
-        id: "",
-        coins: 0,
-        cards: [],
-        name: "",
-        state: 0,
-    });
-    const userId = nakamaClient?.session?.user_id;
+    const [client, setClient] = useState<PlayerInfo>(initialPlayer);
+    const userId = nakamaClient?.session ? nakamaClient?.session?.user_id : "";
     useEffect(() => {
         nakamaClient.socket.onmatchdata = (matchData: MatchData) => {
             console.log("-> matchData", matchData);
@@ -95,7 +98,7 @@ export const GameContextProvider: FC = ({ children }) => {
                     const clientPlayer = playerInfos[userId];
                     setClient(clientPlayer);
                     setUsers(transformPlayerInfos(playerInfos, userId));
-                    setCurrentPlayer(currentPlayer.name);
+                    setCurrentPlayer(currentPlayer);
                     break;
                 case OP_CODE.TICK:
                     setTimeLeft(matchData.data.deadline);
@@ -105,7 +108,7 @@ export const GameContextProvider: FC = ({ children }) => {
                     setChooseCards(chooseCards);
                     break;
                 case OP_CODE.INFO:
-                    setInfos((infos) => [matchData.data.message, ...infos]);
+                    setInfos((infos) => [...infos, matchData.data.message]);
                     break;
             }
         };
