@@ -3,7 +3,7 @@ import { useContext } from "react";
 import { gameContext } from "../../contexts/gameContext";
 
 export function Header() {
-    const { currentPlayer, timeLeft } = useContext(gameContext);
+    const { currentPlayer, timeLeft, isCurrent } = useContext(gameContext);
     return (
         <Box
             sx={{
@@ -14,7 +14,7 @@ export function Header() {
                 color: "red",
             }}
         >
-            <div>{currentPlayer}的回合</div>
+            <div>{isCurrent ? "你" : currentPlayer}的回合</div>
             <div>回合时间: {timeLeft}s</div>
         </Box>
     );

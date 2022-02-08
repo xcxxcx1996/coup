@@ -18,7 +18,7 @@ class Nakama {
     private password: string = "password123";
     constructor() {}
 
-    async authenticate(email: string) {
+    authenticate = async (email: string) => {
         this.session = await this.client.authenticateEmail(
             email,
             this.password,
@@ -31,9 +31,9 @@ class Nakama {
         saveInStorage("token", token);
         saveInStorage("refreshToken", refreshToken);
         await this.socket.connect(this.session, true);
-    }
+    };
 
-    reconnect() {
+    reconnect = async () => {
         const email = retrieveInStorage("email");
         if (email) {
             const token = retrieveInStorage("token");
@@ -52,132 +52,116 @@ class Nakama {
                 })
                 .catch((err) => console.log(err));
         }
-    }
+    };
 
     getUserEmail() {
         return retrieveInStorage("email");
     }
 
-    async findMatch() {
+    findMatch = async () => {
         // ep4
         const rpcid = "find_match";
         const matches = await this.client.rpc(this.session, rpcid, {});
         this.matchID = (matches.payload as { matchIds: string[] }).matchIds[0];
         saveInStorage("matchID", this.matchID);
         await this.socket.joinMatch(this.matchID);
-    }
+    };
 
-    async readyStart() {
+    readyStart = async () => {
         await this.socket.sendMatchState(
             this.matchID,
             OP_CODE.READY_START,
             null
         );
-    }
+    };
 
-    async startGame() {
+    startGame = async () => {
         await this.socket.sendMatchState(this.matchID, OP_CODE.START, null);
-    }
-
-    async update() {
-        await this.socket.sendMatchState(this.matchID, OP_CODE.UPDATE, null);
-    }
+    };
 
     async rejected() {
         await this.socket.sendMatchState(this.matchID, OP_CODE.REJECTED, null);
     }
 
-    async drawCard() {
-        await this.socket.sendMatchState(this.matchID, OP_CODE.DRAW_CARD, null);
-    }
-
-    async assassin(playerId: string) {
+    assassin = async (playerId: string) => {
         await this.socket.sendMatchState(
             this.matchID,
             OP_CODE.ASSASSIN,
             playerId
         );
-    }
+    };
 
-    async denyKill() {
+    denyKill = async () => {
         await this.socket.sendMatchState(this.matchID, OP_CODE.DENY_KILL, null);
-    }
+    };
 
-    async drawThreeCoins() {
+    drawThreeCoins = async () => {
         await this.socket.sendMatchState(
             this.matchID,
             OP_CODE.DRAW_THREE_COINS,
             null
         );
-    }
+    };
 
-    async denyMoney() {
+    denyMoney = async () => {
         await this.socket.sendMatchState(
             this.matchID,
             OP_CODE.DENY_MONEY,
             null
         );
-    }
+    };
 
-    async changeCard() {
+    changeCard = async () => {
         await this.socket.sendMatchState(
             this.matchID,
             OP_CODE.CHANGE_CARD,
             null
         );
-    }
+    };
 
-    async denySteal() {
+    denySteal = async () => {
         await this.socket.sendMatchState(
             this.matchID,
             OP_CODE.DENY_STEAL,
             null
         );
-    }
+    };
 
-    async stealCoins(playerId: string) {
+    stealCoins = async (playerId: string) => {
         await this.socket.sendMatchState(
             this.matchID,
             OP_CODE.STEAL_COINS,
             playerId
         );
-    }
+    };
 
-    async discardCard(cardId: string) {
+    discardCard = async (cardId: string) => {
         await this.socket.sendMatchState(
             this.matchID,
             OP_CODE.DISCARD_CARD,
             cardId
         );
-    }
+    };
 
-    async drawCoins(coinNum: number) {
+    drawCoins = async (coinNum: number) => {
         await this.socket.sendMatchState(
             this.matchID,
             OP_CODE.DRAW_COINS,
             coinNum
         );
-    }
+    };
 
-    async question(isQuestion: boolean) {
+    question = async (isQuestion: boolean) => {
         await this.socket.sendMatchState(
             this.matchID,
             OP_CODE.QUESTION,
             isQuestion
         );
-    }
+    };
 
-    async finishGame() {
-        await this.socket.sendMatchState(this.matchID, OP_CODE.DONE, null);
-    }
-
-    async coup(playerId: string) {
+    coup = async (playerId: string) => {
         await this.socket.sendMatchState(this.matchID, OP_CODE.COUP, playerId);
-    }
-
-    async info() {
-        await this.socket.sendMatchState(this.matchID, OP_CODE.INFO, null);
-    }
+    };
 }
 
 export const nakamaClient = new Nakama();

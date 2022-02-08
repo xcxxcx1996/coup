@@ -22,6 +22,7 @@ export interface GameContext {
     setCards: Dispatch<SetStateAction<ICard[]>>;
     shouldDiscard: boolean;
     chooseCards: ICard[];
+    isCurrent: boolean;
 }
 
 export const gameContext = createContext<GameContext>({
@@ -34,6 +35,7 @@ export const gameContext = createContext<GameContext>({
     setCards: null,
     shouldDiscard: false,
     chooseCards: null,
+    isCurrent: false,
 });
 
 export interface PlayerInfo {
@@ -70,13 +72,14 @@ export const GameContextProvider: FC = ({ children }) => {
     const [users, setUsers] = useState<IUser[]>([]);
     const [cards, setCards] = useState<ICard[]>([]);
     const [currentPlayer, setCurrentPlayer] = useState("");
+    const [isCurrent, setIsCurrent] = useState(false);
     const [timeLeft, setTimeLeft] = useState(0);
     const [shouldReconnect, setShouldReconnect] = useState(false);
     const [shouldDiscard, setShouldDiscard] = useState(false);
     const [chooseCards, setChooseCards] = useState<ICard[]>([]);
+    const userId = nakamaClient.session.user_id;
     useEffect(() => {
         nakamaClient.socket.onmatchdata = (matchData: MatchData) => {
-            console.log("-> matchData", matchData);
             switch (matchData.op_code) {
                 case OP_CODE.START:
                 case OP_CODE.UPDATE:
@@ -88,6 +91,7 @@ export const GameContextProvider: FC = ({ children }) => {
                     );
                     setCards(playerInfos[currentPlayerId].cards);
                     setCurrentPlayer(playerInfos[currentPlayerId].name);
+                    setIsCurrent(userId === currentPlayerId);
                     break;
                 case OP_CODE.TICK:
                     setTimeLeft(matchData.data.deadline);
@@ -116,6 +120,7 @@ export const GameContextProvider: FC = ({ children }) => {
                 users,
                 setUsers,
                 currentPlayer,
+                isCurrent,
                 timeLeft,
                 shouldReconnect,
                 cards,
