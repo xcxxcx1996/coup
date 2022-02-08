@@ -10,8 +10,9 @@ import (
 )
 
 func (serv *MatchService) Coup(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) {
-	msg := &api.Coup{}
 
+	msg := &api.Coup{}
+	state.ActionComplete = true
 	myTurn := message.GetUserId() == state.CurrentPlayerID
 
 	err := global.Unmarshaler.Unmarshal(message.GetData(), msg)
@@ -21,8 +22,11 @@ func (serv *MatchService) Coup(dispatcher runtime.MatchDispatcher, message runti
 		return
 	}
 	// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_COUP), nil, nil, nil, true)
+	state.ActionComplete = false
 	state.EnterDicardState(msg.PlayerId)
-	info := fmt.Sprintf("%v 对%v发动政变", message.GetUsername(), state.GetPlayerNameByID(msg.PlayerId))
-	buf, _ := global.Marshaler.Marshal(&api.Info{Info: info})
-	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+	info := fmt.Sprintf("%v launching a coup to %v", message.GetUsername(), state.GetPlayerNameByID(msg.PlayerId))
+	SendNotification(info, dispatcher)
+
+	// buf, _ := global.Marshaler.Marshal(&api.ActionInfo{Message: info})
+	// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
 }

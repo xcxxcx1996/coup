@@ -129,3 +129,8 @@ func (serv *MatchService) StartMatch(dispatcher runtime.MatchDispatcher, logger 
 	}
 	return s
 }
+
+func SendNotification(msg string, dispatcher runtime.MatchDispatcher) {
+	buf, _ := global.Marshaler.Marshal(&api.ActionInfo{Message: msg})
+	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+}

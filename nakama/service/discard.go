@@ -25,28 +25,32 @@ func (serv *MatchService) Discard(dispatcher runtime.MatchDispatcher, message ru
 	cards := state.PlayerInfos[message.GetUserId()].Cards
 	for i, c := range cards {
 		if c.Id == msg.CardId {
-			discard = c
+			// discard = c
 			cards = append(cards[:i], cards[i+1:]...)
 		}
 	}
-	info := fmt.Sprintf("%v弃牌 %v", message.GetUsername(), discard.Role)
-	buf, _ := global.Marshaler.Marshal(&api.Info{Info: info})
-	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+	info := fmt.Sprintf("%v discard the %v", message.GetUsername(), discard.Role)
+	SendNotification(info, dispatcher)
+
+	// buf, _ := global.Marshaler.Marshal(&api.ActionInfo{Message: info})
+	// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
 	// 判断玩家是否会死
 	alive, _ := state.Alive(message.GetUserId())
 	if !alive {
 		state.EliminatePlayer(message.GetUserId())
-		info := fmt.Sprintf("%v被淘汰了", message.GetUserId())
-		buf, _ := global.Marshaler.Marshal(&api.Info{Info: info})
-		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+		// info := fmt.Sprintf("%v被淘汰了", message.GetUserId())
+		// buf, _ := global.Marshaler.Marshal(&api.ActionInfo{Message: info})
+		// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
 		//
-		buf, _ = global.Marshaler.Marshal(&api.Dead{Player: state.PlayerInfos[message.GetUserId()]})
-		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_DEAD), buf, nil, nil, true)
+		// buf, _ = global.Marshaler.Marshal(&api.Dead{Player: state.PlayerInfos[message.GetUserId()]})
+		// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_DEAD), buf, nil, nil, true)
 		// 判断冠军
 		if len(state.PlayerSequence) == 1 {
-			buf, _ = global.Marshaler.Marshal(&api.Done{Winner: state.PlayerInfos[state.PlayerSequence[0]]})
-			_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_DONE), buf, nil, nil, true)
+			// buf, _ = global.Marshaler.Marshal(&api.Done{Winner: state.PlayerInfos[state.PlayerSequence[0]]})
+			// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_DONE), buf, nil, nil, true)
 		}
 	}
-
+	if state.ActionComplete {
+		state.NextTurn()
+	}
 }

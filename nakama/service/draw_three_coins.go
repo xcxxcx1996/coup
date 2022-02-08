@@ -5,7 +5,6 @@ import (
 
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
-	"github.com/xcxcx1996/coup/global"
 	"github.com/xcxcx1996/coup/model"
 )
 
@@ -23,10 +22,11 @@ func (a DrawThreeCoins) Start(dispatcher runtime.MatchDispatcher, message runtim
 	}
 	a.message = message
 	state.Actions.Push(a)
+	info := fmt.Sprintf("%v claims the barron, want to gain 3 coins", message.GetUsername())
+	SendNotification(info, dispatcher)
+	// buf, _ := global.Marshaler.Marshal(&api.ActionInfo{Message: fmt.Sprintf()})
 
-	buf, _ := global.Marshaler.Marshal(&api.Info{Info: fmt.Sprintf("%v 发动公爵技能，想拿三块钱", message.GetUsername())})
-
-	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+	// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
 	state.EnterQuestion()
 
 }
@@ -34,9 +34,13 @@ func (a DrawThreeCoins) Start(dispatcher runtime.MatchDispatcher, message runtim
 // 只有质疑没有阻止
 func (a DrawThreeCoins) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
 	state.PlayerInfos[state.CurrentPlayerID].Coins += 3
+	info := fmt.Sprintf("%v successful gain 3 coins", a.message.GetUsername())
+	SendNotification(info, dispatcher)
 
-	buf, _ := global.Marshaler.Marshal(&api.Info{Info: fmt.Sprintf("%v 成功拿了三块钱", a.message.GetUsername())})
-	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+	// buf, _ := global.Marshaler.Marshal(&api.ActionInfo{Message: })
+	// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+	state.Actions.Pop()
+	state.NextTurn()
 }
 
 // 阻止失败，开始拿钱

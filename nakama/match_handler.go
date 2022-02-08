@@ -230,7 +230,6 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 	if s.Playing {
 		s.DeadlineRemainingTicks--
 		if s.DeadlineRemainingTicks%tickRate == 0 {
-			logger.Info("tick:%v", s.DeadlineRemainingTicks/tickRate)
 			buf, _ := global.Marshaler.Marshal(&api.Tick{Deadline: s.DeadlineRemainingTicks / tickRate})
 			_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_TICK), buf, nil, nil, true)
 		}

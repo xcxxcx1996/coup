@@ -138,8 +138,12 @@ message Tick{
     int64 deadline = 1;
 }
 // 历史信息
-message Info {
+message Message {
     string info=1;
+}
+
+message ActionInfo {
+    string message=1;
 }
 
 // A game state update sent by the server to clients.
