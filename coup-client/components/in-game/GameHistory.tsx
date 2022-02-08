@@ -17,6 +17,7 @@ export const GameHistory = () => {
     const handleReconnect = useCallback(() => {
         nakamaClient.reconnect();
     }, []);
+
     return (
         <Box
             sx={{

@@ -96,7 +96,10 @@ const MenuButton = (props: MenuButtonProps) => {
                         dense={true}
                         divider={true}
                         key={item.text}
-                        onClick={item.onClick}
+                        onClick={async () => {
+                            await item.onClick();
+                            handleClose();
+                        }}
                         sx={{
                             width: `${menuItemWidth}px`,
                             display: "flex",
