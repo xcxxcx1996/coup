@@ -18,11 +18,9 @@ export interface GameContext {
     currentPlayer: string;
     timeLeft: number;
     shouldReconnect: boolean;
-    cards: ICard[];
-    setCards: Dispatch<SetStateAction<ICard[]>>;
-    shouldDiscard: boolean;
     chooseCards: ICard[];
-    isCurrent: boolean;
+    infos: string[];
+    client: PlayerInfo;
 }
 
 export const gameContext = createContext<GameContext>({
@@ -31,20 +29,21 @@ export const gameContext = createContext<GameContext>({
     currentPlayer: null,
     timeLeft: null,
     shouldReconnect: null,
-    cards: null,
-    setCards: null,
-    shouldDiscard: false,
     chooseCards: null,
-    isCurrent: false,
+    infos: [],
+    client: null,
 });
 
 export interface PlayerInfo {
-    [id: string]: {
-        id: string;
-        coins: number;
-        cards: ICard[];
-        name: string;
-    };
+    id: string;
+    coins: number;
+    cards: ICard[];
+    name: string;
+    state?: number;
+}
+
+export interface PlayerInfos {
+    [id: string]: PlayerInfo;
 }
 
 export interface ICard {
@@ -53,7 +52,7 @@ export interface ICard {
 }
 
 export const transformPlayerInfos = (
-    playerInfo: PlayerInfo,
+    playerInfo: PlayerInfos,
     currentPlayerId: string
 ) => {
     return Object.values(playerInfo).map((item) => ({
@@ -70,13 +69,18 @@ export const transformPlayerInfos = (
 
 export const GameContextProvider: FC = ({ children }) => {
     const [users, setUsers] = useState<IUser[]>([]);
-    const [cards, setCards] = useState<ICard[]>([]);
     const [currentPlayer, setCurrentPlayer] = useState("");
-    const [isCurrent, setIsCurrent] = useState(false);
     const [timeLeft, setTimeLeft] = useState(0);
     const [shouldReconnect, setShouldReconnect] = useState(false);
-    const [shouldDiscard, setShouldDiscard] = useState(false);
     const [chooseCards, setChooseCards] = useState<ICard[]>([]);
+    const [infos, setInfos] = useState<string[]>([]);
+    const [client, setClient] = useState<PlayerInfo>({
+        id: "",
+        coins: 0,
+        cards: [],
+        name: "",
+        state: 0,
+    });
     const userId = nakamaClient?.session?.user_id;
     useEffect(() => {
         nakamaClient.socket.onmatchdata = (matchData: MatchData) => {
@@ -84,25 +88,28 @@ export const GameContextProvider: FC = ({ children }) => {
             switch (matchData.op_code) {
                 case OP_CODE.START:
                 case OP_CODE.UPDATE:
-                    const playerInfos: PlayerInfo = matchData.data.playerInfos;
+                    const playerInfos: PlayerInfos = matchData.data.playerInfos;
                     const currentPlayerId: string =
                         matchData.data.currentPlayerId;
+                    const currentPlayer = playerInfos[currentPlayerId];
+                    const clientPlayer = playerInfos[userId];
+                    setClient(clientPlayer);
                     setUsers(
                         transformPlayerInfos(playerInfos, currentPlayerId)
                     );
-                    setCards(playerInfos[currentPlayerId].cards);
-                    setCurrentPlayer(playerInfos[currentPlayerId].name);
-                    setIsCurrent(userId === currentPlayerId);
+                    setCurrentPlayer(currentPlayer.name);
                     break;
                 case OP_CODE.TICK:
                     setTimeLeft(matchData.data.deadline);
                     break;
-                case OP_CODE.DISCARD_CARD:
-                    setShouldDiscard(true);
-                    break;
                 case OP_CODE.CHANGE_CARD:
                     const chooseCards = matchData.data.chooseCards;
                     setChooseCards(chooseCards);
+                    break;
+                case OP_CODE.INFO:
+                    console.log(matchData.data.message);
+                    setInfos([matchData.data.message, ...infos]);
+                    break;
             }
         };
     }, []);
@@ -121,13 +128,11 @@ export const GameContextProvider: FC = ({ children }) => {
                 users,
                 setUsers,
                 currentPlayer,
-                isCurrent,
                 timeLeft,
                 shouldReconnect,
-                cards,
-                setCards,
-                shouldDiscard,
+                client,
                 chooseCards,
+                infos,
             }}
         >
             {children}

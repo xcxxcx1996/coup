@@ -1,10 +1,19 @@
-import { Box, Button } from "@mui/material";
+import { Box, Button, Divider, Theme } from "@mui/material";
 import React, { useCallback, useContext } from "react";
 import { gameContext } from "../../contexts/gameContext";
 import { nakamaClient } from "../../utils/nakama";
+import { styled } from "@mui/material/styles";
+
+const Root = styled("div")(({ theme }: { theme: Theme }) => ({
+    width: "100%",
+    ...theme.typography.body2,
+    "& > :not(style) + :not(style)": {
+        marginTop: theme.spacing(2),
+    },
+}));
 
 export const GameHistory = () => {
-    const { shouldReconnect } = useContext(gameContext);
+    const { shouldReconnect, infos } = useContext(gameContext);
     const handleReconnect = useCallback(() => {
         nakamaClient.reconnect();
     }, []);
@@ -30,7 +39,14 @@ export const GameHistory = () => {
                     重连
                 </Button>
             )}
-            Game start!
+            <Root>
+                {infos.map((info, index) => (
+                    <div key={index}>
+                        {info}
+                        <Divider />
+                    </div>
+                ))}
+            </Root>
         </Box>
     );
 };

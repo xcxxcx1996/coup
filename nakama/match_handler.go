@@ -26,7 +26,7 @@ const (
 	// delayBetweenGamesSec = 5
 	turnTimeFastSec   = 10
 	nextStartSec      = 10
-	turnTimeNormalSec = 10
+	turnTimeNormalSec = 30
 )
 
 // Compile-time check to make sure all required functions are implemented.
