@@ -39,11 +39,9 @@ const Home: NextPage = () => {
 
     useEffect(() => {
         if (counter === 0) {
-            router.push("in-game").then((r) => {
-                console.log("-> r", r);
-            });
+            router.push("in-game");
         }
-    }, [counter, setCounter]);
+    }, [counter, router, setCounter]);
 
     const handleChange = (
         e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>

@@ -38,10 +38,10 @@ export function UserInfo(props: UserInfoProps) {
 
 export const UserCarousel = () => {
     const { users } = useContext(gameContext);
-    return <Users users={users} />;
+    return <MemoizedUsers users={users} />;
 };
 
-const Users = memo(({ users }: { users: IUser[] }) => {
+export const MemoizedUsers = memo(function User({ users }: { users: IUser[] }) {
     return (
         <Box
             sx={{
