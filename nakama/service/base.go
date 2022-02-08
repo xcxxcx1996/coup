@@ -150,15 +150,20 @@ func ValidAction(state *model.MatchState, message runtime.MatchData, allowState 
 			return false
 		}
 	}
-
-	// 合理的人
-	myTurn := message.GetUserId() == state.CurrentPlayerID
-	if !myTurn {
-		log.Println("wrong Turn")
-	}
 	if allowState != state.State {
-		log.Println("wrong Turn")
+		return false
 	}
-	// 合理的操作
-	return myTurn && allowState == state.State
+	switch allowState {
+	case api.State_START:
+		ok = message.GetUserId() == state.CurrentPlayerID
+	case api.State_CHOOSE_CARD:
+		ok = message.GetUserId() == state.CurrentPlayerID
+	case api.State_DISCARD:
+		ok = message.GetUserId() == state.CurrentDiscarder
+	case api.State_QUESTION:
+		ok = message.GetUserId() == state.Currentquestioner
+	default:
+		ok = message.GetUserId() == state.CurrentDenyer
+	}
+	return
 }
