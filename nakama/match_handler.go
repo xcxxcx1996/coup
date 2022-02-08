@@ -25,11 +25,7 @@ const (
 	// delayBetweenGamesSec = 5
 	turnTimeFastSec   = 10
 	nextStartSec      = 10
-<<<<<<< Updated upstream
 	turnTimeNormalSec = 30
-=======
-	turnTimeNormalSec = 20
->>>>>>> Stashed changes
 )
 
 // Compile-time check to make sure all required functions are implemented.
