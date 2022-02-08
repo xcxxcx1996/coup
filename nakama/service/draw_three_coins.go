@@ -13,10 +13,9 @@ type DrawThreeCoins struct {
 }
 
 func (a DrawThreeCoins) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) {
-	myTurn := message.GetUserId() == state.CurrentPlayerID
-
-	if !myTurn {
-		// Client sent bad data.
+	valid := ValidAction(state, message, api.State_START, nil)
+	// 推进行动
+	if !valid {
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, nil, nil, true)
 		return
 	}

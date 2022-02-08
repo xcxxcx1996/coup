@@ -2,11 +2,9 @@ package service
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
-	"github.com/xcxcx1996/coup/global"
 	"github.com/xcxcx1996/coup/model"
 )
 
@@ -19,15 +17,12 @@ func (a Assassin) Start(dispatcher runtime.MatchDispatcher, message runtime.Matc
 	// 获得信息、核验
 
 	msg := &api.Assassin{}
-	err := global.Unmarshaler.Unmarshal(message.GetData(), msg)
-	myTurn := message.GetUserId() == state.CurrentPlayerID
-	if err != nil || !myTurn {
-		// Client sent bad data.
-		log.Printf("错误的参数:%v , 不是我的回合:%v", err, myTurn)
+	valid := ValidAction(state, message, api.State_START, msg)
+	// 推进行动
+	if !valid {
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, nil, nil, true)
 		return
 	}
-	// 推进行动
 	a.Assassinated = msg.PlayerId
 	a.Assassinor = message.GetUserId()
 	state.Actions.Push(a)
@@ -41,7 +36,7 @@ func (a Assassin) Start(dispatcher runtime.MatchDispatcher, message runtime.Matc
 
 // 1. 没人质疑，2. 有人质疑，但失败
 func (a Assassin) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
-	info := fmt.Sprintln("question end，deny start")
+	info := fmt.Sprintln("question end, deny start")
 	SendNotification(info, dispatcher)
 
 	state.EnterDenyAssassin(a.Assassinated)

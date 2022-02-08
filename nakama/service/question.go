@@ -5,7 +5,6 @@ import (
 
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
-	"github.com/xcxcx1996/coup/global"
 	"github.com/xcxcx1996/coup/model"
 )
 
@@ -14,11 +13,9 @@ func (serv *MatchService) Questioning(dispatcher runtime.MatchDispatcher, messag
 
 	msg := &api.Question{}
 
-	myTurn := message.GetUserId() == state.CurrentPlayerID
-
-	err := global.Unmarshaler.Unmarshal(message.GetData(), msg)
-	if err != nil || !myTurn {
-		// Client sent bad data.
+	valid := ValidAction(state, message, api.State_QUESTION, msg)
+	// 推进行动
+	if !valid {
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, nil, nil, true)
 		return
 	}

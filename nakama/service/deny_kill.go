@@ -5,7 +5,6 @@ import (
 
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
-	"github.com/xcxcx1996/coup/global"
 	"github.com/xcxcx1996/coup/model"
 )
 
@@ -17,11 +16,10 @@ type DenyAssassian struct {
 
 func (d DenyAssassian) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) {
 	msg := &api.Deny{}
-	myTurn := message.GetUserId() == state.CurrentPlayerID
 
-	err := global.Unmarshaler.Unmarshal(message.GetData(), msg)
-	if err != nil || !myTurn {
-		// Client sent bad data.
+	valid := ValidAction(state, message, api.State_DENY_ASSASSIN, msg)
+	// 推进行动
+	if !valid {
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, nil, nil, true)
 		return
 	}

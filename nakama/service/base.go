@@ -7,8 +7,8 @@ import (
 	"github.com/xcxcx1996/coup/api"
 	"github.com/xcxcx1996/coup/global"
 	"github.com/xcxcx1996/coup/model"
-	"github.com/xcxcx1996/coup/utils"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 type MatchService struct{}
@@ -65,7 +65,6 @@ func (serv *MatchService) Dispatch(message runtime.MatchData, state *model.Match
 		serv.Questioning(dispatcher, message, state)
 	default:
 	}
-	log.Printf("更新状态:%v", state.PlayerInfos)
 	var opCode api.OpCode
 	var outgoingMsg proto.Message
 	opCode = api.OpCode_OPCODE_UPDATE
@@ -74,6 +73,7 @@ func (serv *MatchService) Dispatch(message runtime.MatchData, state *model.Match
 		CurrentPlayerId: state.CurrentPlayerID,
 		Message:         "update",
 	}
+
 	buf, err := global.Marshaler.Marshal(outgoingMsg)
 	if err != nil {
 		log.Printf("error encoding message: %v", err)
@@ -85,6 +85,7 @@ func (serv *MatchService) Dispatch(message runtime.MatchData, state *model.Match
 
 // 默认行为
 func (serv *MatchService) DefaultAction(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
+	log.Printf("state:   %v", state.State)
 	var message DefaultActionData
 	switch state.State {
 	case api.State_QUESTION:
@@ -103,9 +104,16 @@ func (serv *MatchService) DefaultAction(dispatcher runtime.MatchDispatcher, stat
 	case api.State_START:
 		data, _ := global.Marshaler.Marshal(&api.GetCoin{Coins: 1})
 		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DRAW_COINS), Data: data, Presence: state.Presences[state.CurrentPlayerID]}
-	default:
+	case api.State_DENY_MONEY:
+		data, _ := global.Marshaler.Marshal(&api.Deny{IsDeny: false})
+		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DENY_MONEY), Data: data, Presence: state.Presences[state.CurrentDenyer]}
+	case api.State_DENY_STEAL:
+		data, _ := global.Marshaler.Marshal(&api.Deny{IsDeny: false})
+		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DENY_STEAL), Data: data, Presence: state.Presences[state.CurrentDenyer]}
+	case api.State_DENY_ASSASSIN:
 		data, _ := global.Marshaler.Marshal(&api.Deny{IsDeny: false})
 		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DENY_KILL), Data: data, Presence: state.Presences[state.CurrentDenyer]}
+
 	}
 	serv.Dispatch(message, state, dispatcher)
 }
@@ -120,8 +128,6 @@ func (serv *MatchService) StartMatch(dispatcher runtime.MatchDispatcher, logger 
 		Message:         s.Message,
 		Deadline:        s.DeadlineRemainingTicks / tickRate,
 	})
-
-	log.Printf("data:%v", utils.Bytes2String(buf))
 	if err != nil {
 		logger.Error("error encoding message: %v", err)
 	} else {
@@ -133,4 +139,26 @@ func (serv *MatchService) StartMatch(dispatcher runtime.MatchDispatcher, logger 
 func SendNotification(msg string, dispatcher runtime.MatchDispatcher) {
 	buf, _ := global.Marshaler.Marshal(&api.ActionInfo{Message: msg})
 	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+}
+
+func ValidAction(state *model.MatchState, message runtime.MatchData, allowState api.State, msg protoreflect.ProtoMessage) (ok bool) {
+	if msg != nil {
+		err := global.Unmarshaler.Unmarshal(message.GetData(), msg)
+		if err != nil {
+			log.Println("wrong match data")
+			// Client sent bad data.
+			return false
+		}
+	}
+
+	// 合理的人
+	myTurn := message.GetUserId() == state.CurrentPlayerID
+	if !myTurn {
+		log.Println("wrong Turn")
+	}
+	if allowState != state.State {
+		log.Println("wrong Turn")
+	}
+	// 合理的操作
+	return myTurn && allowState == state.State
 }

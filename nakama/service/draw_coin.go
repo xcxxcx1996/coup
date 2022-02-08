@@ -2,11 +2,9 @@ package service
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
-	"github.com/xcxcx1996/coup/global"
 	"github.com/xcxcx1996/coup/model"
 )
 
@@ -18,12 +16,9 @@ type DrawCoin struct {
 func (a DrawCoin) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) {
 
 	msg := &api.GetCoin{}
-	myTurn := message.GetUserId() == state.CurrentPlayerID
-	log.Println("messagegetuserid", message.GetUserId())
-	err := global.Unmarshaler.Unmarshal(message.GetData(), msg)
-	if err != nil || !myTurn {
-		// Client sent bad data.
-		log.Printf("错误的参数:%v , 不是我的回合:%v", err, myTurn)
+	valid := ValidAction(state, message, api.State_START, msg)
+	// 推进行动
+	if !valid {
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, nil, nil, true)
 		return
 	}

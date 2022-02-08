@@ -5,7 +5,6 @@ import (
 
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
-	"github.com/xcxcx1996/coup/global"
 	"github.com/xcxcx1996/coup/model"
 )
 
@@ -17,14 +16,13 @@ type Steal struct {
 func (a Steal) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) {
 
 	msg := &api.StealCoins{}
-	myTurn := message.GetUserId() == state.CurrentPlayerID
-
-	err := global.Unmarshaler.Unmarshal(message.GetData(), msg)
-	if err != nil || !myTurn {
-		// Client sent bad data.
+	valid := ValidAction(state, message, api.State_START, msg)
+	// 推进行动
+	if !valid {
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, nil, nil, true)
 		return
 	}
+
 	a.Victim = msg.PlayerId
 	a.Thief = message.GetUserId()
 	state.Actions.Push(a)
@@ -38,7 +36,6 @@ func (a Steal) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchDa
 func (a Steal) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
 	info := fmt.Sprintln("question end, enter deny ")
 	SendNotification(info, dispatcher)
-
 	state.EnterDenySteal(a.Victim)
 }
 

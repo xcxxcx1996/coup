@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"log"
 	"math/rand"
 	"time"
 
@@ -26,7 +25,11 @@ const (
 	// delayBetweenGamesSec = 5
 	turnTimeFastSec   = 10
 	nextStartSec      = 10
+<<<<<<< Updated upstream
 	turnTimeNormalSec = 30
+=======
+	turnTimeNormalSec = 20
+>>>>>>> Stashed changes
 )
 
 // Compile-time check to make sure all required functions are implemented.
@@ -235,7 +238,6 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 		}
 		if s.DeadlineRemainingTicks <= 0 {
 			// The player has run out of time to submit their move.
-			log.Println("回合到了")
 			serv.DefaultAction(dispatcher, s)
 		}
 	}
