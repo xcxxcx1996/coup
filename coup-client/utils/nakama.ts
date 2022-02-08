@@ -67,32 +67,16 @@ class Nakama {
         await this.socket.joinMatch(this.matchID);
     };
 
-    readyStart = async () => {
-        await this.socket.sendMatchState(
-            this.matchID,
-            OP_CODE.READY_START,
-            null
-        );
-    };
-
-    startGame = async () => {
-        await this.socket.sendMatchState(this.matchID, OP_CODE.START, null);
-    };
-
-    async rejected() {
-        await this.socket.sendMatchState(this.matchID, OP_CODE.REJECTED, null);
-    }
-
     assassin = async (playerId: string) => {
-        await this.socket.sendMatchState(
-            this.matchID,
-            OP_CODE.ASSASSIN,
-            playerId
-        );
+        await this.socket.sendMatchState(this.matchID, OP_CODE.ASSASSIN, {
+            player_id: playerId,
+        });
     };
 
-    denyKill = async () => {
-        await this.socket.sendMatchState(this.matchID, OP_CODE.DENY_KILL, null);
+    denyKill = async (isDeny: boolean) => {
+        await this.socket.sendMatchState(this.matchID, OP_CODE.DENY_KILL, {
+            is_deny: isDeny,
+        });
     };
 
     drawThreeCoins = async () => {
@@ -103,28 +87,28 @@ class Nakama {
         );
     };
 
-    denyMoney = async () => {
-        await this.socket.sendMatchState(
-            this.matchID,
-            OP_CODE.DENY_MONEY,
-            null
-        );
+    denyMoney = async (isDeny: boolean) => {
+        await this.socket.sendMatchState(this.matchID, OP_CODE.DENY_MONEY, {
+            is_deny: isDeny,
+        });
     };
 
-    changeCard = async () => {
+    changeCard = async (cards?: string[]) => {
         await this.socket.sendMatchState(
             this.matchID,
             OP_CODE.CHANGE_CARD,
-            null
+            cards
+                ? {
+                      cards,
+                  }
+                : null
         );
     };
 
-    denySteal = async () => {
-        await this.socket.sendMatchState(
-            this.matchID,
-            OP_CODE.DENY_STEAL,
-            null
-        );
+    denySteal = async (isDeny: boolean) => {
+        await this.socket.sendMatchState(this.matchID, OP_CODE.DENY_STEAL, {
+            is_deny: isDeny,
+        });
     };
 
     stealCoins = async (playerId: string) => {
@@ -144,19 +128,15 @@ class Nakama {
     };
 
     drawCoins = async (coinNum: number) => {
-        await this.socket.sendMatchState(
-            this.matchID,
-            OP_CODE.DRAW_COINS,
-            coinNum
-        );
+        await this.socket.sendMatchState(this.matchID, OP_CODE.DRAW_COINS, {
+            coins: coinNum,
+        });
     };
 
     question = async (isQuestion: boolean) => {
-        await this.socket.sendMatchState(
-            this.matchID,
-            OP_CODE.QUESTION,
-            isQuestion
-        );
+        await this.socket.sendMatchState(this.matchID, OP_CODE.QUESTION, {
+            is_question: isQuestion,
+        });
     };
 
     coup = async (playerId: string) => {
