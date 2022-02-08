@@ -134,7 +134,7 @@ export const AbilityDialog = (props: AbilityProps) => {
             >
                 <AbilityBtn
                     text="女王（防刺杀）"
-                    onClick={handleClick(nakamaClient.denyKill)}
+                    onClick={handleClick(() => nakamaClient.denyKill(true))}
                     disabled={!isCurrent}
                 />
                 <AbilityBtn
@@ -144,7 +144,7 @@ export const AbilityDialog = (props: AbilityProps) => {
                 />
                 <AbilityBtn
                     text="男爵（阻止收2金币）"
-                    onClick={handleClick(nakamaClient.denyMoney)}
+                    onClick={handleClick(() => nakamaClient.denyMoney(true))}
                     disabled={!isCurrent}
                 />
                 <AbilityBtn
@@ -154,7 +154,7 @@ export const AbilityDialog = (props: AbilityProps) => {
                 />
                 <AbilityBtn
                     text="大使（阻止偷金币）"
-                    onClick={handleClick(nakamaClient.denySteal)}
+                    onClick={handleClick(() => nakamaClient.denySteal(true))}
                     disabled={!isCurrent}
                 />
                 <MenuButton
@@ -171,7 +171,7 @@ export const AbilityDialog = (props: AbilityProps) => {
                 />
                 <AbilityBtn
                     text="队长（阻止偷金币）"
-                    onClick={handleClick(nakamaClient.denySteal)}
+                    onClick={handleClick(() => nakamaClient.denySteal(true))}
                     disabled={!isCurrent}
                 />
                 <MenuButton
