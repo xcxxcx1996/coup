@@ -10,7 +10,7 @@ import { IUser } from "../components/in-game/UserCarousel";
 import { nakamaClient } from "../utils/nakama";
 import { MatchData } from "@heroiclabs/nakama-js/socket";
 import { OP_CODE } from "../constants/op_code";
-import { rolesMap } from "../constants";
+import { ROLES, rolesMap } from "../constants";
 
 export interface GameContext {
     users: IUser[];
@@ -50,12 +50,19 @@ export interface ICard {
     role: number;
 }
 
-export const transformPlayerInfos = (playerInfo: PlayerInfo) => {
+export const transformPlayerInfos = (
+    playerInfo: PlayerInfo,
+    currentPlayerId: string
+) => {
     return Object.values(playerInfo).map((item) => ({
         id: item.id,
         name: item.name,
         coins: item.coins,
-        roles: item.cards.map((card) => rolesMap[String(card.role)]),
+        roles: item.cards.map((card) => {
+            return item.id === currentPlayerId
+                ? rolesMap[String(card.role)]
+                : rolesMap[ROLES.UNROLE];
+        }),
     }));
 };
 
@@ -76,7 +83,9 @@ export const GameContextProvider: FC = ({ children }) => {
                     const playerInfos: PlayerInfo = matchData.data.playerInfos;
                     const currentPlayerId: string =
                         matchData.data.currentPlayerId;
-                    setUsers(transformPlayerInfos(playerInfos));
+                    setUsers(
+                        transformPlayerInfos(playerInfos, currentPlayerId)
+                    );
                     setCards(playerInfos[currentPlayerId].cards);
                     setCurrentPlayer(playerInfos[currentPlayerId].name);
                     break;
