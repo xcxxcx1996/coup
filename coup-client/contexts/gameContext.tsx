@@ -53,14 +53,14 @@ export interface ICard {
 
 export const transformPlayerInfos = (
     playerInfo: PlayerInfos,
-    currentPlayerId: string
+    userId: string
 ) => {
     return Object.values(playerInfo).map((item) => ({
         id: item.id,
         name: item.name,
         coins: item.coins,
         roles: item.cards.map((card) => {
-            return item.id === currentPlayerId
+            return item.id === userId
                 ? rolesMap[String(card.role)]
                 : rolesMap[ROLES.UNROLE];
         }),
@@ -94,9 +94,7 @@ export const GameContextProvider: FC = ({ children }) => {
                     const currentPlayer = playerInfos[currentPlayerId];
                     const clientPlayer = playerInfos[userId];
                     setClient(clientPlayer);
-                    setUsers(
-                        transformPlayerInfos(playerInfos, currentPlayerId)
-                    );
+                    setUsers(transformPlayerInfos(playerInfos, userId));
                     setCurrentPlayer(currentPlayer.name);
                     break;
                 case OP_CODE.TICK:
