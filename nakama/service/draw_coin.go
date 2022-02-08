@@ -31,7 +31,7 @@ func (a DrawCoin) Start(dispatcher runtime.MatchDispatcher, message runtime.Matc
 		SendNotification(info, dispatcher)
 		state.EnterDenyMoney()
 	} else {
-		info := "%v want to gain 1 coins"
+		info := fmt.Sprintf("%v want to gain 1 coins", a.message.GetUsername())
 		SendNotification(info, dispatcher)
 		a.AfterDeny(dispatcher, state)
 	}
