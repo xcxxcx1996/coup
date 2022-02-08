@@ -77,9 +77,10 @@ export const GameContextProvider: FC = ({ children }) => {
     const [shouldReconnect, setShouldReconnect] = useState(false);
     const [shouldDiscard, setShouldDiscard] = useState(false);
     const [chooseCards, setChooseCards] = useState<ICard[]>([]);
-    const userId = nakamaClient.session.user_id;
+    const userId = nakamaClient?.session?.user_id;
     useEffect(() => {
         nakamaClient.socket.onmatchdata = (matchData: MatchData) => {
+            console.log("-> matchData", matchData);
             switch (matchData.op_code) {
                 case OP_CODE.START:
                 case OP_CODE.UPDATE:

@@ -244,7 +244,7 @@ export const ControlPanel = () => {
                 btnWidth={140}
                 text={"政变"}
                 items={users
-                    .filter((u) => u.id !== nakamaClient.session.user_id)
+                    .filter((u) => u.id !== nakamaClient?.session?.user_id)
                     .map((u) => ({
                         text: u.name,
                         onClick: () => nakamaClient.coup(u.id),
