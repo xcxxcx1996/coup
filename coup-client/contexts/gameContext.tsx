@@ -107,8 +107,7 @@ export const GameContextProvider: FC = ({ children }) => {
                     setChooseCards(chooseCards);
                     break;
                 case OP_CODE.INFO:
-                    console.log(matchData.data.message);
-                    setInfos([matchData.data.message, ...infos]);
+                    setInfos((infos) => [matchData.data.message, ...infos]);
                     break;
             }
         };
