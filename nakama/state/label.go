@@ -1,4 +1,4 @@
-package model
+package state
 
 type MatchLabel struct {
 	Open int `json:"open"`

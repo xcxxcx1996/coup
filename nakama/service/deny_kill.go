@@ -6,7 +6,7 @@ import (
 
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
-	"github.com/xcxcx1996/coup/model"
+	model "github.com/xcxcx1996/coup/state"
 )
 
 type DenyAssassian struct {
@@ -54,11 +54,10 @@ func (d DenyAssassian) Start(dispatcher runtime.MatchDispatcher, message runtime
 // 1.我有女王，你们都不质疑我,刺杀行为停止 2. 有人质疑我，我有女王，刺杀行为停止
 func (d DenyAssassian) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
 	// 不质疑删除IAction， 然后assain改为 isdeny
-	state.Actions.Pop()
-	action, _ := state.Actions.Last()
+	action, err := state.Actions.Pop()
 	ass, ok := action.(Assassin)
 	if !ok {
-		return errors.New("wrong action")
+		return errors.New("wrong ass action")
 	}
 	ass.Stop(dispatcher, state)
 	// ass.IsDeny = true

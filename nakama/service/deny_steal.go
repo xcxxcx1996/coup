@@ -6,27 +6,30 @@ import (
 
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
-	"github.com/xcxcx1996/coup/model"
+	model "github.com/xcxcx1996/coup/state"
 )
 
 type DenySteal struct {
 	Victim string
 	Thief  string
+	Role   api.Role
 }
 
 func (d DenySteal) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) (err error) {
-	msg := &api.Deny{}
+	msg := &api.DenySteal{}
 	// 推进行动
 	if err = ValidAction(state, message, api.State_DENY_STEAL, msg); err != nil {
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, nil, nil, true)
 		return
 	}
+	d.Role = msg.Role
 	// 如果不阻止
 	if !msg.IsDeny {
 		ass, _ := state.Actions.Pop()
 		ass.AfterDeny(dispatcher, state)
 		return
 	}
+
 	// 阻止
 	action, err := state.Actions.Last()
 	if err != nil {
@@ -52,20 +55,13 @@ func (d DenySteal) AfterQuestion(dispatcher runtime.MatchDispatcher, state *mode
 	// 不质疑删除IAction， 然后assain改为 isdeny
 	info := fmt.Sprintln("question end, stop steal")
 	SendNotification(info, dispatcher)
-	_, err = state.Actions.Pop()
+	action, err := state.Actions.Pop()
 	if err != nil {
 		return
 	}
-	steal, err := state.Actions.Last()
-	if err != nil {
-		return
-	}
-	if err != nil {
-		return
-	}
-	err = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_DENY_KILL), nil, nil, nil, true)
-	if err != nil {
-		return
+	steal, ok := action.(Steal)
+	if !ok {
+		return errors.New("wrong steal")
 	}
 	err = steal.Stop(dispatcher, state)
 	if err != nil {
@@ -81,7 +77,7 @@ func (d DenySteal) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.Ma
 
 func (d DenySteal) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
 
-	info := fmt.Sprintln("deny failed")
+	info := fmt.Sprintln("Deny failed.")
 	SendNotification(info, dispatcher)
 
 	_, err = state.Actions.Pop()
@@ -92,12 +88,16 @@ func (d DenySteal) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchSt
 	if err != nil {
 		return
 	}
-	err = action.AfterDeny(dispatcher, state)
+	steal, ok := action.(Steal)
+	if !ok {
+		return errors.New("wrong action")
+	}
+	err = steal.AfterDeny(dispatcher, state)
 	return
 }
 
 func (d DenySteal) GetRole() api.Role {
-	return api.Role_QUEEN
+	return d.Role
 }
 
 func (c DenySteal) GetActor() string {

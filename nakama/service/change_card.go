@@ -6,7 +6,7 @@ import (
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
 	"github.com/xcxcx1996/coup/global"
-	"github.com/xcxcx1996/coup/model"
+	model "github.com/xcxcx1996/coup/state"
 )
 
 const CHANGE_NUM = 2
@@ -31,9 +31,6 @@ func (c ChangeCard) Start(dispatcher runtime.MatchDispatcher, message runtime.Ma
 	info := fmt.Sprintf("%v claims the diplomat, want to change the card", message.GetUsername())
 	SendNotification(info, dispatcher)
 
-	// buf, _ := global.Marshaler.Marshal(&api.ActionInfo{Message: info})
-	// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
-
 	// question状态
 	state.EnterQuestion()
 	return nil
@@ -49,15 +46,10 @@ func (c ChangeCard) AfterQuestion(dispatcher runtime.MatchDispatcher, state *mod
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, []runtime.Presence{c.message}, nil, true)
 		return err
 	}
-
 	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_CHOOSE_CARD), buf, []runtime.Presence{c.message}, nil, true)
 	info := fmt.Sprintln("question end, enter choose card")
 	SendNotification(info, dispatcher)
-
-	// buf, _ = global.Marshaler.Marshal(&api.ActionInfo{Message: info})
-	// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
 	state.EnterChooseCard()
-	state.Actions.Pop()
 	return err
 }
 
@@ -68,11 +60,9 @@ func (c ChangeCard) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.M
 
 // 被质疑成功，停止
 func (c ChangeCard) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
+	state.ActionComplete = true
 	info := fmt.Sprintln("change card was stoped")
 	SendNotification(info, dispatcher)
-
-	state.Actions.Pop()
-	state.NextTurn()
 	return nil
 }
 

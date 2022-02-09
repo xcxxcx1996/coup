@@ -10,8 +10,8 @@ import (
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
 	"github.com/xcxcx1996/coup/global"
-	"github.com/xcxcx1996/coup/model"
 	"github.com/xcxcx1996/coup/service"
+	model "github.com/xcxcx1996/coup/state"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -23,7 +23,7 @@ const (
 	maxEmptySec    = 30
 	// delayBetweenGamesSec = 5
 	turnTimeFastSec   = 10
-	nextStartSec      = 10
+	nextStartSec      = 5
 	turnTimeNormalSec = 30
 )
 
@@ -104,20 +104,6 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 		// Check if we must send a message to this user to update them on the current game state.
 		var opCode api.OpCode
 		var msg proto.Message
-		logger.Info("有人加入了房间username:%v", s.Presences[presence.GetUsername()])
-
-		// There's no game in progress but we still have a completed game that the user was part of.
-		// They likely disconnected before the game ended, and have since forfeited because they took too long to return.
-		//todo aaa
-		// 	else if s.board != nil && s.marks != nil && s.marks[presence.GetUserId()] > api.Mark_MARK_UNSPECIFIED {
-		// 	opCode = api.OpCode_OPCODE_DONE
-		// 	msg = &api.Done{
-		// 		Board:           s.board,
-		// 		Winner:          s.winner,
-		// 		WinnerPositions: s.winnerPositions,
-		// 		NextGameStart:   t.Add(time.Duration(s.nextGameRemainingTicks/tickRate) * time.Second).Unix(),
-		// 	}
-		// }
 
 		// Send a message to the user that just joined, if one is needed based on the logic above.
 		if msg != nil {
@@ -133,7 +119,6 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 	// Check if match was open to new players, but should now be closed.
 	if len(s.Presences) >= MAX_PLAYER_NUM && s.Label.Open != 0 {
 		s.Label.Open = 0
-		logger.Info("人数足够，房间已关闭，准备开始比赛，开始倒计时")
 		if labelJSON, err := json.Marshal(s.Label); err != nil {
 			logger.Error("error encoding Label: %v", err)
 		} else {
@@ -142,7 +127,6 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 			}
 		}
 	}
-
 	return s
 }
 
@@ -181,7 +165,6 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 		// Check if we need to update the Label so the match now advertises itself as open to join.
 		if len(s.Presences) < MAX_PLAYER_NUM && s.Label.Open != 1 {
 			s.Label.Open = 1
-			logger.Info("人数不足，房间已开启，等待他人加入")
 			if labelJSON, err := json.Marshal(s.Label); err != nil {
 				logger.Error("error encoding Label: %v", err)
 			} else {
@@ -193,7 +176,6 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 
 		// Check if we have enough players to start a game.
 		if len(s.Presences) < MAX_PLAYER_NUM {
-			logger.Info("人数不足，等待他人加入")
 			return s
 		}
 		// Check if enough time has passed since the last game.
@@ -212,9 +194,8 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 			return s
 		}
 
-		// We can start a game! Set up the game state and assign the marks to each player.
+		// We can start a game!
 		s.Playing = true
-		logger.Info("开始游戏")
 		//初始化游戏
 		m.service.StartMatch(dispatcher, logger, s, tickRate, turnTimeNormalSec)
 		return s
@@ -247,11 +228,3 @@ func (m *MatchHandler) MatchSignal(ctx context.Context, logger runtime.Logger, d
 func (m *MatchHandler) MatchTerminate(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, graceSeconds int) interface{} {
 	return state
 }
-
-// func calculateDeadlineTicks(l *MatchLabel) int64 {
-// 	if l.Fast == 1 {
-// 		return turnTimeFastSec * tickRate
-// 	} else {
-// 		return turnTimeNormalSec * tickRate
-// 	}
-// }

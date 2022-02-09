@@ -5,7 +5,7 @@ import (
 
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
-	"github.com/xcxcx1996/coup/model"
+	model "github.com/xcxcx1996/coup/state"
 )
 
 type DrawThreeCoins struct {
@@ -20,7 +20,7 @@ func (a DrawThreeCoins) Start(dispatcher runtime.MatchDispatcher, message runtim
 	}
 	a.message = message
 	state.Actions.Push(a)
-	info := fmt.Sprintf("%v claims the barron, want to gain 3 coins", message.GetUsername())
+	info := fmt.Sprintf("%v claims the barron and want to gain 3 coins.", message.GetUsername())
 	SendNotification(info, dispatcher)
 
 	state.EnterQuestion()
@@ -33,13 +33,8 @@ func (a DrawThreeCoins) AfterQuestion(dispatcher runtime.MatchDispatcher, state 
 	if err != nil {
 		return
 	}
-	info := fmt.Sprintf("%v successful gain 3 coins", a.message.GetUsername())
+	info := fmt.Sprintf("%v successful gain 3 coins.", a.message.GetUsername())
 	SendNotification(info, dispatcher)
-
-	_, err = state.Actions.Pop()
-	if err != nil {
-		return
-	}
 	state.NextTurn()
 	return
 }
@@ -52,9 +47,8 @@ func (a DrawThreeCoins) AfterDeny(dispatcher runtime.MatchDispatcher, state *mod
 // 冒充公爵被质疑成功了
 func (a DrawThreeCoins) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
 	state.ActionComplete = true
-	info := fmt.Sprintf("%v was denied to get 3 coins ", a.message.GetUsername())
+	info := fmt.Sprintf("%v was denied to get 3 coins.", a.message.GetUsername())
 	SendNotification(info, dispatcher)
-	_, err = state.Actions.Pop()
 	return
 }
 

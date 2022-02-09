@@ -1,4 +1,4 @@
-package model
+package state
 
 import (
 	"errors"
@@ -15,14 +15,6 @@ const (
 	BEFORE_CHANGE
 	COMPLETE_CHANGE
 )
-
-// // 动作
-// type Action struct {
-// 	ActionID  int64
-// 	State     ActionState
-// 	Role      api.Role
-// 	ActionArg interface{}
-// }
 
 type IAction interface {
 	// 开始动作
@@ -55,8 +47,8 @@ func (s *Actions) Pop() (IAction, error) {
 		s.data = []IAction{}
 		return item, nil
 	} else {
-		item = s.data[0]
-		s.data = s.data[1:]
+		item = s.data[length-1]
+		s.data = s.data[:length-1]
 		return item, nil
 	}
 }

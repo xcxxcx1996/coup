@@ -5,7 +5,7 @@ import (
 
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
-	"github.com/xcxcx1996/coup/model"
+	model "github.com/xcxcx1996/coup/state"
 )
 
 type Steal struct {
@@ -42,7 +42,7 @@ func (a Steal) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model.Ma
 }
 
 func (a Steal) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
-
+	state.ActionComplete = true
 	info := fmt.Sprintln("deny end, steal")
 	SendNotification(info, dispatcher)
 	resCoins, err := state.GetCoins(a.Victim)
@@ -62,8 +62,6 @@ func (a Steal) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.MatchS
 		state.LoseCoins(a.Victim, StealCoinsNum)
 		state.GainCoins(a.Thief, resCoins)
 	}
-	state.Actions.Pop()
-	state.NextTurn()
 	return
 }
 
@@ -71,8 +69,6 @@ func (a Steal) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState)
 	state.ActionComplete = true
 	info := fmt.Sprintln("steal was stoped")
 	SendNotification(info, dispatcher)
-	state.Actions.Pop()
-	state.NextTurn()
 	return
 }
 
