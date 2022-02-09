@@ -7,13 +7,12 @@ import (
 	"math/rand"
 	"time"
 
-	"google.golang.org/protobuf/proto"
-
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
 	"github.com/xcxcx1996/coup/global"
 	"github.com/xcxcx1996/coup/model"
 	"github.com/xcxcx1996/coup/service"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -158,6 +157,7 @@ func (m *MatchHandler) MatchLeave(ctx context.Context, logger runtime.Logger, db
 }
 
 func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, messages []runtime.MatchData) interface{} {
+
 	s := state.(*model.MatchState)
 	//关闭房间
 	if len(s.Presences)+s.JoinsInProgress == 0 {

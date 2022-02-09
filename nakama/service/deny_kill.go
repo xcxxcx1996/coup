@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/heroiclabs/nakama-common/runtime"
@@ -11,27 +12,29 @@ import (
 type DenyAssassian struct {
 	Assassinated string
 	Assassinor   string
-	IsDeny       bool
 }
 
-func (d DenyAssassian) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) {
+func (d DenyAssassian) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) (err error) {
 	msg := &api.Deny{}
 
-	valid := ValidAction(state, message, api.State_DENY_ASSASSIN, msg)
-	// 推进行动
-	if !valid {
+	// 验证
+	if err = ValidAction(state, message, api.State_DENY_ASSASSIN, msg); err != nil {
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, nil, nil, true)
 		return
 	}
-	// 如果不阻止，没有下一个人，继续刺杀
+
 	if !msg.IsDeny {
 		ass, _ := state.Actions.Pop()
 		ass.AfterDeny(dispatcher, state)
 		return
 	}
+
 	// 阻止
 	action, _ := state.Actions.Last()
-	ass := action.(Assassin)
+	ass, ok := action.(Assassin)
+	if !ok {
+		return errors.New("wrong action")
+	}
 
 	d.Assassinor = ass.Assassinated
 	d.Assassinated = ass.Assassinor
@@ -45,38 +48,49 @@ func (d DenyAssassian) Start(dispatcher runtime.MatchDispatcher, message runtime
 	// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
 	// question状态
 	state.EnterQuestion()
+	return nil
 }
 
 // 1.我有女王，你们都不质疑我,刺杀行为停止 2. 有人质疑我，我有女王，刺杀行为停止
-func (d DenyAssassian) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
+func (d DenyAssassian) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
 	// 不质疑删除IAction， 然后assain改为 isdeny
 	state.Actions.Pop()
 	action, _ := state.Actions.Last()
-	action.(Assassin).Stop(dispatcher, state)
+	ass, ok := action.(Assassin)
+	if !ok {
+		return errors.New("wrong action")
+	}
+	ass.Stop(dispatcher, state)
 	// ass.IsDeny = true
 	info := fmt.Sprintln("question end, assassin was stopped")
 	SendNotification(info, dispatcher)
-
-	// buf, _ := global.Marshaler.Marshal(&api.ActionInfo{Message: info})
-	// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+	state.NextTurn()
+	return
 }
 
 //
-func (d DenyAssassian) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
+func (d DenyAssassian) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
+	return
 }
 
 // 被质疑成功
-func (d DenyAssassian) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
-	info := fmt.Sprintln("deny end, assassin excute")
-	SendNotification(info, dispatcher)
-
-	// buf, _ := global.Marshaler.Marshal(&api.ActionInfo{Message: info})
-	// _ = dispatchedr.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+func (d DenyAssassian) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
 	state.Actions.Pop()
 	action, _ := state.Actions.Last()
-	action.AfterDeny(dispatcher, state)
+	ass, ok := action.(Assassin)
+	if !ok {
+		return errors.New("wrong action")
+	}
+	info := fmt.Sprintln("deny end, assassin excute")
+	SendNotification(info, dispatcher)
+	ass.AfterDeny(dispatcher, state)
+	return
 }
 
 func (d DenyAssassian) GetRole() api.Role {
 	return api.Role_QUEEN
+}
+
+func (c DenyAssassian) GetActor() string {
+	return c.Assassinated
 }

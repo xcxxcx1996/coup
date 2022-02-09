@@ -1,12 +1,14 @@
 package service
 
 import (
+	"errors"
 	"log"
 
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
 	"github.com/xcxcx1996/coup/global"
 	"github.com/xcxcx1996/coup/model"
+	"github.com/xcxcx1996/coup/utils"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -18,52 +20,56 @@ func New() (s *MatchService) {
 }
 
 func (serv *MatchService) Dispatch(message runtime.MatchData, state *model.MatchState, dispatcher runtime.MatchDispatcher) {
+	var err error
 	switch message.GetOpCode() {
 	// 刺客刺杀
 	case int64(api.OpCode_OPCODE_ASSASSIN):
-		action := Assassin{}
-		action.Start(dispatcher, message, state)
+		var action Assassin
+		err = action.Start(dispatcher, message, state)
 	// 大使换牌
 	case int64(api.OpCode_OPCODE_CHANGE_CARD):
-		action := ChangeCard{}
-		action.Start(dispatcher, message, state)
+		var action ChangeCard
+		err = action.Start(dispatcher, message, state)
 	// 大使选牌
 	case int64(api.OpCode_OPCODE_CHOOSE_CARD):
-		serv.CompleteChangeCard(dispatcher, message, state)
+		err = serv.CompleteChangeCard(dispatcher, message, state)
 	// 政变
 	case int64(api.OpCode_OPCODE_COUP):
-		serv.Coup(dispatcher, message, state)
+		err = serv.Coup(dispatcher, message, state)
 	// 女王阻止刺杀
 	case int64(api.OpCode_OPCODE_DENY_KILL):
-		action := DenyAssassian{}
-		action.Start(dispatcher, message, state)
+		var action DenyAssassian
+		err = action.Start(dispatcher, message, state)
 	// 男爵阻止拿牌
 	case int64(api.OpCode_OPCODE_DENY_MONEY):
-		action := DenyMoney{}
-		action.Start(dispatcher, message, state)
+		var action DenyMoney
+		err = action.Start(dispatcher, message, state)
 	// 男爵拿钱
 	case int64(api.OpCode_OPCODE_DRAW_THREE_COINS):
-		action := DrawThreeCoins{}
-		action.Start(dispatcher, message, state)
+		var action DrawThreeCoins
+		err = action.Start(dispatcher, message, state)
 	//偷钱
 	case int64(api.OpCode_OPCODE_STEAL_COINS):
-		action := Steal{}
-		action.Start(dispatcher, message, state)
+		var action Steal
+		err = action.Start(dispatcher, message, state)
 	//阻止偷钱
 	case int64(api.OpCode_OPCODE_DENY_STEAL):
-		action := DenySteal{}
-		action.Start(dispatcher, message, state)
+		var action DenySteal
+		err = action.Start(dispatcher, message, state)
 	// 普通玩家拿钱
 	case int64(api.OpCode_OPCODE_DRAW_COINS):
-		action := DrawCoin{}
-		action.Start(dispatcher, message, state)
+		var action DrawCoin
+		err = action.Start(dispatcher, message, state)
 	// 普通玩家弃牌
 	case int64(api.OpCode_OPCODE_DISCARD):
-		serv.Discard(dispatcher, message, state)
+		err = serv.Discard(dispatcher, message, state)
 	// 普通玩家质疑
 	case int64(api.OpCode_OPCODE_QUESTION):
-		serv.Questioning(dispatcher, message, state)
-	default:
+		err = serv.Questioning(dispatcher, message, state)
+	}
+	if err != nil {
+		log.Printf("error encoding message: %v", err)
+		return
 	}
 	var opCode api.OpCode
 	var outgoingMsg proto.Message
@@ -77,9 +83,8 @@ func (serv *MatchService) Dispatch(message runtime.MatchData, state *model.Match
 	buf, err := global.Marshaler.Marshal(outgoingMsg)
 	if err != nil {
 		log.Printf("error encoding message: %v", err)
-	} else {
-		_ = dispatcher.BroadcastMessage(int64(opCode), buf, nil, nil, true)
 	}
+	_ = dispatcher.BroadcastMessage(int64(opCode), buf, nil, nil, true)
 	state.ResetDeadLine()
 }
 
@@ -93,14 +98,14 @@ func (serv *MatchService) DefaultAction(dispatcher runtime.MatchDispatcher, stat
 		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_QUESTION), Data: data, Presence: state.Presences[state.Currentquestioner]}
 	case api.State_DISCARD:
 		data, _ := global.Marshaler.Marshal(&api.Discard{CardId: state.PlayerInfos[state.CurrentDiscarder].Cards[0].Id})
-		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DRAW_COINS), Data: data, Presence: state.Presences[state.CurrentDiscarder]}
+		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DISCARD), Data: data, Presence: state.Presences[state.CurrentDiscarder]}
 	case api.State_CHOOSE_CARD:
 		cards := []string{}
 		for _, v := range state.PlayerInfos[state.CurrentDiscarder].Cards {
 			cards = append(cards, v.Id)
 		}
 		data, _ := global.Marshaler.Marshal(&api.ChangeCardResponse{Cards: cards})
-		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_CHOOSE_CARD), Data: data, Presence: state.Presences[state.CurrentDiscarder]}
+		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_CHOOSE_CARD), Data: data, Presence: state.Presences[state.CurrentPlayerID]}
 	case api.State_START:
 		data, _ := global.Marshaler.Marshal(&api.GetCoin{Coins: 1})
 		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DRAW_COINS), Data: data, Presence: state.Presences[state.CurrentPlayerID]}
@@ -141,19 +146,22 @@ func SendNotification(msg string, dispatcher runtime.MatchDispatcher) {
 	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
 }
 
-func ValidAction(state *model.MatchState, message runtime.MatchData, allowState api.State, msg protoreflect.ProtoMessage) (ok bool) {
+func ValidAction(state *model.MatchState, message runtime.MatchData, allowState api.State, msg protoreflect.ProtoMessage) (err error) {
 	if msg != nil {
+		log.Printf("message.GetData(): %v", utils.Bytes2String(message.GetData()))
 		err := global.Unmarshaler.Unmarshal(message.GetData(), msg)
 		if err != nil {
 			log.Println("wrong match data")
 			// Client sent bad data.
-			return false
+			return errors.New("wrong match data")
 		}
 	}
 	if allowState != state.State {
-		return false
+		return errors.New("wrong turn")
 	}
+	var ok bool
 	switch allowState {
+
 	case api.State_START:
 		ok = message.GetUserId() == state.CurrentPlayerID
 	case api.State_CHOOSE_CARD:
@@ -165,5 +173,8 @@ func ValidAction(state *model.MatchState, message runtime.MatchData, allowState 
 	default:
 		ok = message.GetUserId() == state.CurrentDenyer
 	}
-	return
+	if !ok {
+		return errors.New("wrong state")
+	}
+	return nil
 }

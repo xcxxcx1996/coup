@@ -17,6 +17,7 @@ services:
       - data:/var/lib/postgresql/data
 
   nakama:
+    
     build: ./nakama/
     container_name: backend
     depends_on:
@@ -27,6 +28,7 @@ services:
       - >
         /nakama/nakama migrate up --database.address postgres:localdb@postgres:5432/nakama?sslmode=disable &&
         exec /nakama/nakama --config /nakama/data/local.yml --database.address postgres:localdb@postgres:5432/nakama?sslmode=disable
+    tty: true
     expose:
       - "7349"
       - "7350"

@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"log"
 	"math/rand"
 	"time"
 
@@ -190,25 +191,33 @@ func (s *MatchState) NextDenyer() (end bool) {
 //next
 
 // 质疑是否成功
-func (s *MatchState) ValidQuestion() (cardID string, ok bool) {
-	action, ok := s.Actions.Last()
-	if !ok {
-		return "", false
+func (s *MatchState) ValidQuestion() (ok bool) {
+	// getRole
+	action, err := s.Actions.Last()
+	if err != nil {
+		return false
 	}
-
 	role := action.GetRole()
-	cards := s.PlayerInfos[s.CurrentPlayerID].Cards
-	return hasCard(role, cards)
+	log.Printf("cards:", role)
+	// get player
+	cards := s.PlayerInfos[action.GetActor()].Cards
+	log.Printf("cards:", cards)
+	cardId, has := hasCard(role, cards)
+	if !ok {
+		return !has
+	}
+	s.ChangeSingleCard(cardId, action.GetActor())
+	return has
 }
 
 // 某人有这张牌
 func hasCard(role api.Role, cards []*api.Card) (cardID string, ok bool) {
 	for _, c := range cards {
 		if c.Role == role {
-			return c.Id, false
+			return c.Id, true
 		}
 	}
-	return "", true
+	return "", false
 }
 
 func (s *MatchState) SufferDeck() {
@@ -252,4 +261,16 @@ func (s *MatchState) EliminatePlayer(playerID string) error {
 
 func (s *MatchState) ResetDeadLine() {
 	s.DeadlineRemainingTicks = s.MaxDeadlineTicks
+}
+
+func (s *MatchState) DeleteCard(card_id, player_id string) (*api.Card, error) {
+	cards := s.PlayerInfos[player_id].Cards
+	for i, c := range cards {
+		if c.Id == card_id {
+			cards = append(cards[:i], cards[i+1:]...)
+			s.PlayerInfos[player_id].Cards = cards
+			return c, nil
+		}
+	}
+	return nil, errors.New("no record")
 }

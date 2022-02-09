@@ -112,19 +112,15 @@ class Nakama {
     };
 
     stealCoins = async (playerId: string) => {
-        await this.socket.sendMatchState(
-            this.matchID,
-            OP_CODE.STEAL_COINS,
-            playerId
-        );
+        await this.socket.sendMatchState(this.matchID, OP_CODE.STEAL_COINS, {
+            player_id: playerId,
+        });
     };
 
     discardCard = async (cardId: string) => {
-        await this.socket.sendMatchState(
-            this.matchID,
-            OP_CODE.DISCARD_CARD,
-            cardId
-        );
+        await this.socket.sendMatchState(this.matchID, OP_CODE.DISCARD_CARD, {
+            card_id: cardId,
+        });
     };
 
     drawCoins = async (coinNum: number) => {
@@ -140,7 +136,9 @@ class Nakama {
     };
 
     coup = async (playerId: string) => {
-        await this.socket.sendMatchState(this.matchID, OP_CODE.COUP, playerId);
+        await this.socket.sendMatchState(this.matchID, OP_CODE.COUP, {
+            player_id: playerId,
+        });
     };
 }
 
