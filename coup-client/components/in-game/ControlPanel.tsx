@@ -6,13 +6,14 @@ import {
     Menu,
     MenuItem,
 } from "@mui/material";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { gameContext } from "../../contexts/gameContext";
 import { nakamaClient } from "../../utils/nakama";
 import { rolesMap } from "../../constants";
 import { State } from "../../constants/state";
 import { IUser } from "./UserCarousel";
+import { ChangeCardDialog } from "./ChangeCardDialog";
 
 export const isStateIdle = (playerState: number): boolean => {
     return playerState === State.IDLE;
@@ -40,6 +41,10 @@ export const isStateDiscard = (playerState: number): boolean => {
 
 export const isStateStart = (playerState: number): boolean => {
     return playerState === State.START;
+};
+
+export const isStateChooseCard = (playerState: number): boolean => {
+    return playerState === State.CHOOSE_CARD;
 };
 
 export interface IMenuItem {
@@ -92,11 +97,11 @@ const MenuButton = (props: MenuButtonProps) => {
                     "aria-labelledby": "basic-button",
                 }}
             >
-                {items.map((item) => (
+                {items.map((item, index) => (
                     <MenuItem
                         dense={true}
                         divider={true}
-                        key={item.text}
+                        key={index}
                         onClick={async () => {
                             await item.onClick();
                             handleClose();
@@ -291,6 +296,7 @@ export const AbilityDialog = (props: AbilityProps) => {
 
 export const ControlPanel = () => {
     const [open, setOpen] = useState(false);
+    const [openChooseCards, setOpenChooseCards] = useState(false);
     const { users, client } = useContext(gameContext);
     const { cards, state } = client;
     const isIdle = isStateIdle(state);
@@ -298,12 +304,20 @@ export const ControlPanel = () => {
     const isDiscard = isStateDiscard(state);
     const isStart = isStateStart(state);
     const isMustCoup = client.coins >= 10 && isStart;
+    const isChooseCard = isStateChooseCard(state);
     const handleClose = () => {
         setOpen(false);
     };
     const handleClickOpen = () => {
         setOpen(true);
     };
+
+    useEffect(() => {
+        if (isChooseCard) {
+            setOpenChooseCards(true);
+        }
+    }, [isChooseCard]);
+
     return (
         <Box
             sx={{
@@ -327,7 +341,7 @@ export const ControlPanel = () => {
                 sx={{ width: "140px", m: 1 }}
                 variant="contained"
                 onClick={handleClickOpen}
-                disabled={isIdle || isQuestion || isMustCoup}
+                disabled={isIdle || isQuestion || isDiscard || isMustCoup}
             >
                 使用技能
             </Button>
@@ -365,6 +379,12 @@ export const ControlPanel = () => {
                     text: rolesMap[c.role],
                     onClick: () => nakamaClient.discardCard(c.id),
                 }))}
+            />
+            <ChangeCardDialog
+                open={openChooseCards}
+                handleClose={() => {
+                    setOpenChooseCards(false);
+                }}
             />
             <AbilityDialog open={open} handleClose={handleClose} />
         </Box>

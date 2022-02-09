@@ -103,9 +103,9 @@ export const GameContextProvider: FC = ({ children }) => {
                 case OP_CODE.TICK:
                     setTimeLeft(matchData.data.deadline);
                     break;
-                case OP_CODE.CHANGE_CARD:
-                    const chooseCards = matchData.data.chooseCards;
-                    setChooseCards(chooseCards);
+                case OP_CODE.CHOOSE_CARD:
+                    const chooseCards = matchData.data.cards;
+                    setChooseCards(chooseCards || []);
                     break;
                 case OP_CODE.INFO:
                     setInfos((infos) => [...infos, matchData.data.message]);
