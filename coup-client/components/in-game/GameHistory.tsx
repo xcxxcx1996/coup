@@ -22,7 +22,6 @@ export const GameHistory = () => {
     const infoContainer = useRef(null);
 
     useEffect(() => {
-        console.log("infoContainer.current", infoContainer.current);
         const scroll =
             infoContainer.current.scrollHeight -
             infoContainer.current.clientHeight;

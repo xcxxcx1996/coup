@@ -10,7 +10,7 @@ import React, { useContext, useEffect, useState } from "react";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { gameContext } from "../../contexts/gameContext";
 import { nakamaClient } from "../../utils/nakama";
-import { ROLES, rolesMap } from "../../constants";
+import { rolesMap } from "../../constants";
 import { State } from "../../constants/state";
 import { IUser } from "./UserCarousel";
 import { ChangeCardDialog } from "./ChangeCardDialog";
@@ -234,13 +234,13 @@ export const AbilityDialog = (props: AbilityProps) => {
                         {
                             text: "使用",
                             onClick: handleClick(() =>
-                                nakamaClient.denySteal(true, ROLES.DIPLOMAT)
+                                nakamaClient.denySteal(true, "DIPLOMAT")
                             ),
                         },
                         {
                             text: "不使用",
                             onClick: handleClick(() =>
-                                nakamaClient.denySteal(false, ROLES.DIPLOMAT)
+                                nakamaClient.denySteal(false, "DIPLOMAT")
                             ),
                         },
                     ]}
@@ -266,13 +266,13 @@ export const AbilityDialog = (props: AbilityProps) => {
                         {
                             text: "使用",
                             onClick: handleClick(() =>
-                                nakamaClient.denySteal(true, ROLES.CAPTAIN)
+                                nakamaClient.denySteal(true, "CAPTAIN")
                             ),
                         },
                         {
                             text: "不使用",
                             onClick: handleClick(() =>
-                                nakamaClient.denySteal(false, ROLES.CAPTAIN)
+                                nakamaClient.denySteal(false, "CAPTAIN")
                             ),
                         },
                     ]}
@@ -322,7 +322,11 @@ export const ControlPanel = () => {
     useEffect(() => {
         let timeout: ReturnType<typeof setTimeout>;
         if (gameEnd) {
-            timeout = setTimeout(() => router.push("/"), 5000);
+            nakamaClient
+                .leaveMatch()
+                .then(
+                    () => (timeout = setTimeout(() => router.push("/"), 5000))
+                );
         }
         return () => clearTimeout(timeout);
     }, [gameEnd]);

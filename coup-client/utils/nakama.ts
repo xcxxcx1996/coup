@@ -67,6 +67,10 @@ class Nakama {
         await this.socket.joinMatch(this.matchID);
     };
 
+    leaveMatch = async () => {
+        await this.socket.leaveMatch(this.matchID);
+    };
+
     assassin = async (playerId: string) => {
         await this.socket.sendMatchState(this.matchID, OP_CODE.ASSASSIN, {
             player_id: playerId,
@@ -93,19 +97,23 @@ class Nakama {
         });
     };
 
-    changeCard = async (cards?: string[]) => {
+    changeCard = async () => {
         await this.socket.sendMatchState(
             this.matchID,
             OP_CODE.CHANGE_CARD,
-            cards
-                ? {
-                      cards,
-                  }
-                : null
+            null
         );
     };
 
-    denySteal = async (isDeny: boolean, role: number) => {
+    chooseCard = async (cards: string[]) => {
+        await this.socket.sendMatchState(
+            this.matchID,
+            OP_CODE.CHOOSE_CARD,
+            cards
+        );
+    };
+
+    denySteal = async (isDeny: boolean, role: string) => {
         await this.socket.sendMatchState(this.matchID, OP_CODE.DENY_STEAL, {
             is_deny: isDeny,
             role,

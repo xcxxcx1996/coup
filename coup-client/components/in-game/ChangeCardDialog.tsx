@@ -32,7 +32,7 @@ export const ChangeCardDialog = (props: ChangeCardDialogProps) => {
         setChosenCards(value as string[]);
     };
     const handleSubmit = async () => {
-        await nakamaClient.changeCard(chosenCards);
+        await nakamaClient.chooseCard(chosenCards);
         handleClose();
     };
     return (
