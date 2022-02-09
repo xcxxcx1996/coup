@@ -105,9 +105,10 @@ class Nakama {
         );
     };
 
-    denySteal = async (isDeny: boolean) => {
+    denySteal = async (isDeny: boolean, role: number) => {
         await this.socket.sendMatchState(this.matchID, OP_CODE.DENY_STEAL, {
             is_deny: isDeny,
+            role,
         });
     };
 

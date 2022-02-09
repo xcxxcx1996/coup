@@ -10,7 +10,7 @@ import React, { useContext, useEffect, useState } from "react";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { gameContext } from "../../contexts/gameContext";
 import { nakamaClient } from "../../utils/nakama";
-import { rolesMap } from "../../constants";
+import { ROLES, rolesMap } from "../../constants";
 import { State } from "../../constants/state";
 import { IUser } from "./UserCarousel";
 import { ChangeCardDialog } from "./ChangeCardDialog";
@@ -234,13 +234,13 @@ export const AbilityDialog = (props: AbilityProps) => {
                         {
                             text: "使用",
                             onClick: handleClick(() =>
-                                nakamaClient.denySteal(true)
+                                nakamaClient.denySteal(true, ROLES.DIPLOMAT)
                             ),
                         },
                         {
                             text: "不使用",
                             onClick: handleClick(() =>
-                                nakamaClient.denySteal(false)
+                                nakamaClient.denySteal(false, ROLES.DIPLOMAT)
                             ),
                         },
                     ]}
@@ -266,13 +266,13 @@ export const AbilityDialog = (props: AbilityProps) => {
                         {
                             text: "使用",
                             onClick: handleClick(() =>
-                                nakamaClient.denySteal(true)
+                                nakamaClient.denySteal(true, ROLES.CAPTAIN)
                             ),
                         },
                         {
                             text: "不使用",
                             onClick: handleClick(() =>
-                                nakamaClient.denySteal(false)
+                                nakamaClient.denySteal(false, ROLES.CAPTAIN)
                             ),
                         },
                     ]}
