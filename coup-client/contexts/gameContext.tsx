@@ -1,11 +1,4 @@
-import {
-    createContext,
-    Dispatch,
-    FC,
-    SetStateAction,
-    useEffect,
-    useState,
-} from "react";
+import { createContext, FC, useEffect, useState } from "react";
 import { IUser } from "../components/in-game/UserCarousel";
 import { nakamaClient } from "../utils/nakama";
 import { MatchData } from "@heroiclabs/nakama-js/socket";
@@ -14,24 +7,24 @@ import { ROLES, rolesMap } from "../constants";
 
 export interface GameContext {
     users: IUser[];
-    setUsers: Dispatch<SetStateAction<IUser[]>>;
     currentPlayer: PlayerInfo;
     timeLeft: number;
     shouldReconnect: boolean;
     chooseCards: ICard[];
     infos: string[];
     client: PlayerInfo;
+    gameEnd: boolean;
 }
 
 export const gameContext = createContext<GameContext>({
     users: null,
-    setUsers: null,
     currentPlayer: null,
     timeLeft: null,
     shouldReconnect: null,
     chooseCards: null,
     infos: [],
     client: null,
+    gameEnd: false,
 });
 
 export interface PlayerInfo {
@@ -84,6 +77,7 @@ export const GameContextProvider: FC = ({ children }) => {
     const [chooseCards, setChooseCards] = useState<ICard[]>([]);
     const [infos, setInfos] = useState<string[]>([]);
     const [client, setClient] = useState<PlayerInfo>(initialPlayer);
+    const [gameEnd, setGameEnd] = useState(false);
     const userId = nakamaClient?.session ? nakamaClient?.session?.user_id : "";
     useEffect(() => {
         nakamaClient.socket.onmatchdata = (matchData: MatchData) => {
@@ -110,6 +104,13 @@ export const GameContextProvider: FC = ({ children }) => {
                 case OP_CODE.INFO:
                     setInfos((infos) => [...infos, matchData.data.message]);
                     break;
+                case OP_CODE.DONE:
+                    const winner = matchData.data.winner;
+                    setInfos((infos) => [
+                        ...infos,
+                        `${winner.name}获胜，即将回到首页`,
+                    ]);
+                    setGameEnd(true);
             }
         };
     }, []);
@@ -126,13 +127,13 @@ export const GameContextProvider: FC = ({ children }) => {
         <gameContext.Provider
             value={{
                 users,
-                setUsers,
                 currentPlayer,
                 timeLeft,
                 shouldReconnect,
                 client,
                 chooseCards,
                 infos,
+                gameEnd,
             }}
         >
             {children}

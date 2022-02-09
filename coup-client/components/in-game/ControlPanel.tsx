@@ -14,6 +14,7 @@ import { rolesMap } from "../../constants";
 import { State } from "../../constants/state";
 import { IUser } from "./UserCarousel";
 import { ChangeCardDialog } from "./ChangeCardDialog";
+import { router } from "next/client";
 
 export const isStateIdle = (playerState: number): boolean => {
     return playerState === State.IDLE;
@@ -297,7 +298,7 @@ export const AbilityDialog = (props: AbilityProps) => {
 export const ControlPanel = () => {
     const [open, setOpen] = useState(false);
     const [openChooseCards, setOpenChooseCards] = useState(false);
-    const { users, client } = useContext(gameContext);
+    const { users, client, gameEnd } = useContext(gameContext);
     const { cards, state } = client;
     const isIdle = isStateIdle(state);
     const isQuestion = isStateQuestion(state);
@@ -317,6 +318,14 @@ export const ControlPanel = () => {
             setOpenChooseCards(true);
         }
     }, [isChooseCard]);
+
+    useEffect(() => {
+        let timeout: ReturnType<typeof setTimeout>;
+        if (gameEnd) {
+            timeout = setTimeout(() => router.push("/"), 5000);
+        }
+        return () => clearTimeout(timeout);
+    }, [gameEnd]);
 
     return (
         <Box

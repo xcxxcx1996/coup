@@ -23,14 +23,12 @@ export interface ChangeCardDialogProps {
 export const ChangeCardDialog = (props: ChangeCardDialogProps) => {
     const { open, handleClose } = props;
     const { chooseCards, client } = useContext(gameContext);
-    console.log("-> chooseCards", chooseCards);
     const [chosenCards, setChosenCards] = useState<string[]>([]);
     const allCards: ICard[] = client.cards.concat(chooseCards);
     const handleChange = (event: SelectChangeEvent<string[]>) => {
         const {
             target: { value },
         } = event;
-        console.log("-> value", value);
         setChosenCards(value as string[]);
     };
     const handleSubmit = async () => {
