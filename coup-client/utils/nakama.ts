@@ -9,8 +9,10 @@ const retrieveInStorage = (key: string): string => {
     return localStorage.getItem(key);
 };
 
+const HOST = process.env.HOST || "localhost";
+
 class Nakama {
-    private client: Client = new Client("defaultkey", "localhost", "7350");
+    private client: Client = new Client("defaultkey", HOST, "7350");
     public session: Session;
     private useSSL: boolean = false;
     public socket: Socket = this.client.createSocket(this.useSSL, false);
