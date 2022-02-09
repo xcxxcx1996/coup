@@ -36,7 +36,7 @@ export const ChangeCardDialog = (props: ChangeCardDialogProps) => {
         handleClose();
     };
     return (
-        <Dialog open={open} onBackdropClick={() => {}}>
+        <Dialog open={open}>
             <DialogTitle sx={{ textAlign: "center" }}>
                 选择要换的卡牌
             </DialogTitle>

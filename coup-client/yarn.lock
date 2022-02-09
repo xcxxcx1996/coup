@@ -550,7 +550,7 @@
   "resolved" "https://registry.npmjs.org/@types/json5/-/json5-0.0.29.tgz"
   "version" "0.0.29"
 
-"@types/node@17.0.14":
+"@types/node@^17.0.14":
   "integrity" "sha512-SbjLmERksKOGzWzPNuW7fJM7fk3YXVTFiZWB/Hs99gwhk+/dnrQRPBQjPW9aO+fi1tAffi9PrwFvsmOKmDTyng=="
   "resolved" "https://registry.npmjs.org/@types/node/-/node-17.0.14.tgz"
   "version" "17.0.14"

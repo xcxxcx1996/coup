@@ -14,7 +14,7 @@ import { rolesMap } from "../../constants";
 import { State } from "../../constants/state";
 import { IUser } from "./UserCarousel";
 import { ChangeCardDialog } from "./ChangeCardDialog";
-import { router } from "next/client";
+import { useRouter } from "next/router";
 
 export const isStateIdle = (playerState: number): boolean => {
     return playerState === State.IDLE;
@@ -306,6 +306,7 @@ export const ControlPanel = () => {
     const isStart = isStateStart(state);
     const isMustCoup = client.coins >= 10 && isStart;
     const isChooseCard = isStateChooseCard(state);
+    const router = useRouter();
     const handleClose = () => {
         setOpen(false);
     };
