@@ -7,14 +7,14 @@ import (
 )
 
 // 玩家选择完牌后，发送choose，然后服务器换牌
-func (serv *MatchService) CompleteChangeCard(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) {
+func (serv *MatchService) CompleteChangeCard(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) (err error) {
 	//更换牌
-
+	state.ActionComplete = true
 	msg := &api.ChangeCardResponse{}
 
-	valid := ValidAction(state, message, api.State_START, msg)
+	err = ValidAction(state, message, api.State_START, msg)
 	// 推进行动
-	if !valid {
+	if err != nil {
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, nil, nil, true)
 		return
 	}
@@ -34,4 +34,5 @@ func (serv *MatchService) CompleteChangeCard(dispatcher runtime.MatchDispatcher,
 	state.SufferDeck()
 	//下一个回合
 	state.NextTurn()
+	return nil
 }

@@ -110,7 +110,7 @@ message PlayerInfo{
     string id=1;
     string name=2;
     repeated Card cards=3;
-    int64 coins=4;
+    int32 coins=4;
     State state=5;
 }
 

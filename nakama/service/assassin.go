@@ -13,15 +13,15 @@ type Assassin struct {
 	Assassinated string
 }
 
-func (a Assassin) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) {
+func (a Assassin) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) error {
 	// 获得信息、核验
 
 	msg := &api.Assassin{}
-	valid := ValidAction(state, message, api.State_START, msg)
+	err := ValidAction(state, message, api.State_START, msg)
 	// 推进行动
-	if !valid {
+	if err != nil {
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, nil, nil, true)
-		return
+		return err
 	}
 	a.Assassinated = msg.PlayerId
 	a.Assassinor = message.GetUserId()
@@ -32,31 +32,37 @@ func (a Assassin) Start(dispatcher runtime.MatchDispatcher, message runtime.Matc
 	info := fmt.Sprintf("%v want to assassin %v ", message.GetUsername(), state.GetPlayerNameByID(a.Assassinated))
 	SendNotification(info, dispatcher)
 	state.EnterQuestion()
+	return nil
 }
 
 // 1. 没人质疑，2. 有人质疑，但失败
-func (a Assassin) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
+func (a Assassin) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model.MatchState) error {
 	info := fmt.Sprintln("question end, deny start")
 	SendNotification(info, dispatcher)
-
 	state.EnterDenyAssassin(a.Assassinated)
+	return nil
 }
 
 // 玩家进入刺杀阶段
-func (a Assassin) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
+func (a Assassin) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.MatchState) error {
+	state.ActionComplete = true
 	info := fmt.Sprintln("deny end, action execute")
 	SendNotification(info, dispatcher)
-
 	state.EnterDicardState(a.Assassinated)
+	return nil
 }
 
-// 行动被停止，删除，然后跳过
-func (a Assassin) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
+// 行动被停止 1.被成功质疑，2.被阻止
+func (a Assassin) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState) error {
+	state.ActionComplete = true
 	info := fmt.Sprintln("assassin was stopped")
 	SendNotification(info, dispatcher)
-
 	state.Actions.Pop()
-	state.NextTurn()
+	return nil
+}
+
+func (a Assassin) GetActor() string {
+	return a.Assassinor
 }
 
 func (a Assassin) GetRole() api.Role {

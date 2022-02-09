@@ -1,8 +1,8 @@
 package service
 
 import (
+	"errors"
 	"fmt"
-	"log"
 
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
@@ -10,18 +10,17 @@ import (
 )
 
 type DenyMoney struct {
+	message runtime.MatchData
 }
 
 // 公爵阻止别人拿钱
-func (d DenyMoney) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) {
-	log.Println("start deny money")
+func (d DenyMoney) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) (err error) {
 	msg := &api.Deny{}
-	valid := ValidAction(state, message, api.State_DENY_MONEY, msg)
-	// 推进行动
-	if !valid {
+	if err = ValidAction(state, message, api.State_DENY_MONEY, msg); err != nil {
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, nil, nil, true)
 		return
 	}
+	d.message = message
 	// 如果不阻止，下一个刺杀者
 	if !msg.IsDeny {
 		end := state.NextDenyer()
@@ -39,41 +38,66 @@ func (d DenyMoney) Start(dispatcher runtime.MatchDispatcher, message runtime.Mat
 
 	info := fmt.Sprintf("%v cliam the barron, want to stop get money", message.GetUsername())
 	SendNotification(info, dispatcher)
-	// buf, _ := global.Marshaler.Marshal(&api.ActionInfo{Message: info})
-	// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+
 	// question状态
 	state.EnterQuestion()
+	return nil
 }
 
 //所有人都不质疑,那么阻止别人拿两块钱
-func (d DenyMoney) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
+func (d DenyMoney) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
 	info := fmt.Sprintln("question end, action was stop")
 	SendNotification(info, dispatcher)
-
-	// 不质疑删除IAction， 然后assain改为 isdeny
-	// info := fmt.Sprintln("阻止成功")
-	// buf, _ := global.Marshaler.Marshal(&api.ActionInfo{Message: info})
-	// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
-
-	state.Actions.Pop()
+	_, err = state.Actions.Pop()
+	if err != nil {
+		return
+	}
 	action, _ := state.Actions.Last()
-	action.Stop(dispatcher, state)
+	gainCoins, ok := action.(Assassin)
+	if !ok {
+		return errors.New("wrong action")
+	}
+	err = gainCoins.Stop(dispatcher, state)
+	if err != nil {
+		return err
+	}
 	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_DENY_MONEY), nil, nil, nil, true)
+
+	// 下一个回合
+	defer state.NextTurn()
+	return nil
 }
 
-func (d DenyMoney) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
-
+func (d DenyMoney) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.MatchState) error {
+	return nil
 }
 
-func (d DenyMoney) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
-	state.Actions.Pop()
-	action, _ := state.Actions.Last()
-	action.AfterDeny(dispatcher, state)
-	// info := fmt.Sprintln("阻止失败")
-	// buf, _ := global.Marshaler.Marshal(&api.ActionInfo{Message: info})
-	// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
+func (d DenyMoney) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
+	//
+	_, err = state.Actions.Pop()
+	if err != nil {
+		return
+	}
+	action, err := state.Actions.Last()
+	if err != nil {
+		return
+	}
+
+	gainCoins, ok := action.(Assassin)
+	if !ok {
+		return errors.New("wrong action")
+	}
+
+	info := fmt.Sprintln("deny end, assassin excute")
+	SendNotification(info, dispatcher)
+	gainCoins.AfterDeny(dispatcher, state)
+	return nil
 }
 
 func (d DenyMoney) GetRole() api.Role {
 	return api.Role_QUEEN
+}
+
+func (d DenyMoney) GetActor() string {
+	return d.message.GetUserId()
 }

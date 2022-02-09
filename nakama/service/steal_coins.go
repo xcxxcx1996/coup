@@ -13,56 +13,73 @@ type Steal struct {
 	Thief  string
 }
 
-func (a Steal) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) {
+const StealCoinsNum = 2
 
+func (a Steal) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) (err error) {
 	msg := &api.StealCoins{}
-	valid := ValidAction(state, message, api.State_START, msg)
-	// 推进行动
-	if !valid {
+
+	if err = ValidAction(state, message, api.State_START, msg); err != nil {
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, nil, nil, true)
 		return
 	}
 
 	a.Victim = msg.PlayerId
 	a.Thief = message.GetUserId()
-	state.Actions.Push(a)
-	info := fmt.Sprintf("%v claims the Captain,want to steal %v 的金币", message.GetUsername(), state.GetPlayerNameByID(a.Victim))
-	SendNotification(info, dispatcher)
 
+	state.Actions.Push(a)
+	info := fmt.Sprintf("%v claims the Captain, want to steal %v coins", message.GetUsername(), state.GetPlayerNameByID(a.Victim))
+	SendNotification(info, dispatcher)
 	state.EnterQuestion()
+	return
 }
 
 // 1. 没人质疑，2. 有人质疑，但失败
-func (a Steal) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
-	info := fmt.Sprintln("question end, enter deny ")
+func (a Steal) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
+	info := fmt.Sprintln("question end, enter deny.")
 	SendNotification(info, dispatcher)
 	state.EnterDenySteal(a.Victim)
+	return nil
 }
 
-func (a Steal) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
+func (a Steal) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
+
 	info := fmt.Sprintln("deny end, steal")
 	SendNotification(info, dispatcher)
-
-	coins := state.PlayerInfos[a.Victim].Coins
-	if coins <= 2 {
-		state.PlayerInfos[a.Victim].Coins = 0
-		state.PlayerInfos[state.CurrentPlayerID].Coins += coins
+	resCoins, err := state.GetCoins(a.Victim)
+	if err != nil {
+		return
+	}
+	if resCoins <= StealCoinsNum {
+		err = state.SetCoins(a.Victim, 0)
+		if err != nil {
+			return
+		}
+		err = state.GainCoins(a.Thief, resCoins)
+		if err != nil {
+			return
+		}
 	} else {
-		state.PlayerInfos[a.Victim].Coins -= 2
-		state.PlayerInfos[state.CurrentPlayerID].Coins += 2
+		state.LoseCoins(a.Victim, StealCoinsNum)
+		state.GainCoins(a.Thief, resCoins)
 	}
 	state.Actions.Pop()
 	state.NextTurn()
+	return
 }
 
-func (a Steal) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
+func (a Steal) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
+	state.ActionComplete = true
 	info := fmt.Sprintln("steal was stoped")
 	SendNotification(info, dispatcher)
-
 	state.Actions.Pop()
 	state.NextTurn()
+	return
 }
 
 func (a Steal) GetRole() api.Role {
 	return api.Role_CAPTAIN
+}
+
+func (c Steal) GetActor() string {
+	return c.Thief
 }
