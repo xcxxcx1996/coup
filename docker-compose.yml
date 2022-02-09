@@ -45,19 +45,20 @@ services:
       - "7350:7350"
       - "7351:7351"
     restart: unless-stopped
-  # client:
-  #   build:
-  #     context: ./coup-client
-  #     dockerfile: Dockerfile
-  #   expose:
-  #     - "3000"
-  #   container_name: coup-client
-    
-  #   depends_on:
-  #     - nakama
-  #   volumes:
-  #     - ./coup-client:/www/yunjiuding
-  #     - /www/coup/node_modules
-  #   entrypoint: ["yarn", "start"]
+  client:
+    build:
+      context: ./coup-client
+      dockerfile: Dockerfile
+    expose:
+      - "3000"
+    container_name: coup-client
+    environment:
+      - HOST=backend
+    depends_on:
+      - nakama
+    volumes:
+      - ./coup-client:/www/yunjiuding
+      - /www/coup/node_modules
+    entrypoint: ["yarn", "start"]
 volumes:
   data:
