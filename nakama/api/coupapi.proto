@@ -194,7 +194,6 @@ message ChangeCard{
 message Assassin{
     // 指定玩家id
     string player_id=1;
-
 }
 
 // 政变 政变目标的id
@@ -218,7 +217,10 @@ message RpcFindMatchRequest {
     // // User can choose a fast or normal speed match.
     bool fast = 1;
 }
-
+message DenySteal{
+    bool is_deny=1;
+    Role role=2;
+}
 
 // Payload for an RPC response containing match IDs the user can join.
 message RpcFindMatchResponse {

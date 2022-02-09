@@ -7,7 +7,7 @@ import (
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
 	"github.com/xcxcx1996/coup/global"
-	"github.com/xcxcx1996/coup/model"
+	model "github.com/xcxcx1996/coup/state"
 	"github.com/xcxcx1996/coup/utils"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -90,36 +90,42 @@ func (serv *MatchService) Dispatch(message runtime.MatchData, state *model.Match
 
 // 默认行为
 func (serv *MatchService) DefaultAction(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
-	log.Printf("state:   %v", state.State)
 	var message DefaultActionData
 	switch state.State {
+
 	case api.State_QUESTION:
 		data, _ := global.Marshaler.Marshal(&api.Question{IsQuestion: false})
 		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_QUESTION), Data: data, Presence: state.Presences[state.Currentquestioner]}
+
 	case api.State_DISCARD:
 		data, _ := global.Marshaler.Marshal(&api.Discard{CardId: state.PlayerInfos[state.CurrentDiscarder].Cards[0].Id})
 		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DISCARD), Data: data, Presence: state.Presences[state.CurrentDiscarder]}
+
 	case api.State_CHOOSE_CARD:
 		cards := []string{}
-		for _, v := range state.PlayerInfos[state.CurrentDiscarder].Cards {
+		for _, v := range state.PlayerInfos[state.CurrentPlayerID].Cards {
 			cards = append(cards, v.Id)
 		}
 		data, _ := global.Marshaler.Marshal(&api.ChangeCardResponse{Cards: cards})
 		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_CHOOSE_CARD), Data: data, Presence: state.Presences[state.CurrentPlayerID]}
+
 	case api.State_START:
 		data, _ := global.Marshaler.Marshal(&api.GetCoin{Coins: 1})
 		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DRAW_COINS), Data: data, Presence: state.Presences[state.CurrentPlayerID]}
+
 	case api.State_DENY_MONEY:
 		data, _ := global.Marshaler.Marshal(&api.Deny{IsDeny: false})
 		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DENY_MONEY), Data: data, Presence: state.Presences[state.CurrentDenyer]}
+
 	case api.State_DENY_STEAL:
 		data, _ := global.Marshaler.Marshal(&api.Deny{IsDeny: false})
 		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DENY_STEAL), Data: data, Presence: state.Presences[state.CurrentDenyer]}
+
 	case api.State_DENY_ASSASSIN:
 		data, _ := global.Marshaler.Marshal(&api.Deny{IsDeny: false})
 		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DENY_KILL), Data: data, Presence: state.Presences[state.CurrentDenyer]}
-
 	}
+
 	serv.Dispatch(message, state, dispatcher)
 }
 
@@ -157,6 +163,7 @@ func ValidAction(state *model.MatchState, message runtime.MatchData, allowState 
 		}
 	}
 	if allowState != state.State {
+		log.Println("state:", state.State, "allowState:", allowState)
 		return errors.New("wrong turn")
 	}
 	var ok bool

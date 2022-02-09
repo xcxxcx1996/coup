@@ -39,7 +39,9 @@ const (
 
 //noinspection GoUnusedExportedFunction
 func InitModule(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, initializer runtime.Initializer) error {
+	
 	global.Init()
+	
 	initStart := time.Now()
 	serv := service.New()
 
