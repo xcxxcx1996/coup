@@ -42,7 +42,7 @@ func (d DenyMoney) Start(dispatcher runtime.MatchDispatcher, message runtime.Mat
 	// 阻止
 	state.Actions.Push(d)
 
-	info := fmt.Sprintf(`<p><span style={{ color: "red" }}>%v</span> claims the <span style={{ color: "red" }}>BARON</span> and want to stop getting money.</p >`, message.GetUsername())
+	info := fmt.Sprintf(`<p><span style="color:red;">%v</span> claims the <span style="color:red;">BARON</span> and want to stop getting money.</p >`, message.GetUsername())
 	SendNotification(info, dispatcher)
 	// question状态
 	state.EnterQuestion()

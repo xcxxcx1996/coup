@@ -41,7 +41,7 @@ func (d DenyAssassian) Start(dispatcher runtime.MatchDispatcher, message runtime
 	d.Assassinated = ass.Assassinated
 
 	state.Actions.Push(d)
-	info := fmt.Sprintf(`<p><span style={{ color: "red" }}>%v</span> claims the <span style={{ color: "red" }}>QUEEN</span> and want to stop the kill.</p >`, message.GetUsername())
+	info := fmt.Sprintf(`<p><span style="color:red;">%v</span> claims the <span style="color:red;">QUEEN</span> and want to stop the kill.</p >`, message.GetUsername())
 	SendNotification(info, dispatcher)
 
 	// question状态

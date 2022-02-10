@@ -33,7 +33,7 @@ func (a Assassin) Start(dispatcher runtime.MatchDispatcher, message runtime.Matc
 	state.Actions.Push(a)
 
 	//后处理
-	info := fmt.Sprintf(`<p><span style={{ color: "red" }}>%v</span> claims the <span style={{ color: "red" }}>ASSASSIN</span> and want to assassin <span style={{ color: "red" }}>%v</span> .</p >`, message.GetUsername(), state.GetPlayerNameByID(a.Assassinated))
+	info := fmt.Sprintf(`<p><span style="color:red;">%v</span> claims the <span style="color:red;">ASSASSIN</span> and want to assassin <span style="color:red;">%v</span> .</p >`, message.GetUsername(), state.GetPlayerNameByID(a.Assassinated))
 	SendNotification(info, dispatcher)
 	state.EnterQuestion()
 	return nil
