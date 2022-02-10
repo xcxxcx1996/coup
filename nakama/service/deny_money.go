@@ -36,8 +36,7 @@ func (d DenyMoney) Start(dispatcher runtime.MatchDispatcher, message runtime.Mat
 				return errors.New("wrong draw coins action")
 			}
 			ass.AfterDeny(dispatcher, state)
-
-			
+			state.NextTurn()
 		}
 		return
 	}
