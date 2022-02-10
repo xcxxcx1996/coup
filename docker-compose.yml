@@ -45,18 +45,18 @@ services:
       - "7350:7350"
       - "7351:7351"
     restart: unless-stopped
-  # client:
-  #   build: ./coup-client/
-  #   ports:
-  #     - "3000:3000"
-  #   container_name: coup-client
-  #   environment:
-  #     - HOST=101.200.146.166
-  #   depends_on:
-  #     - nakama
-  #   volumes:
-  #     - ./coup-client:/www/yunjiuding
-  #     - /www/coup/node_modules
-  #   entrypoint: ["yarn", "start"]
+  client:
+    build: ./coup-client/
+    ports:
+      - "3000:3000"
+    container_name: coup-client
+    environment:
+      - HOST=backend 
+    depends_on:
+      - nakama
+    volumes:
+      - ./coup-client:/www/yunjiuding
+      - /www/coup/node_modules
+    entrypoint: ["yarn", "start"]
 volumes:
   data:

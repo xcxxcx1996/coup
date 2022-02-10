@@ -1,6 +1,5 @@
 import { Client, Session, Socket } from "@heroiclabs/nakama-js";
 import { OP_CODE } from "../constants/op_code";
-import getConfig from "next/config";
 
 export const saveInStorage = (key: string, value: string): void => {
     localStorage.setItem(key, value);
@@ -10,13 +9,7 @@ export const retrieveInStorage = (key: string): string => {
     return localStorage.getItem(key);
 };
 
-const HOST = getConfig().publicRuntimeConfig.host || "localhost";
-console.log(
-    "-> getConfig().publicRuntimeConfig.host",
-    "111",
-    getConfig().publicRuntimeConfig.host
-);
-console.log("-> HOST", HOST);
+const HOST = process.env.NEXT_PUBLIC_HOST || "localhost";
 
 class Nakama {
     private client: Client = new Client("defaultkey", HOST, "7350");
