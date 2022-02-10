@@ -1,5 +1,6 @@
 import { Client, Session, Socket } from "@heroiclabs/nakama-js";
 import { OP_CODE } from "../constants/op_code";
+import getConfig from "next/config";
 
 export const saveInStorage = (key: string, value: string): void => {
     localStorage.setItem(key, value);
@@ -9,7 +10,13 @@ export const retrieveInStorage = (key: string): string => {
     return localStorage.getItem(key);
 };
 
-const HOST = process.env.HOST || "localhost";
+const HOST = getConfig().publicRuntimeConfig.host || "localhost";
+console.log(
+    "-> getConfig().publicRuntimeConfig.host",
+    "111",
+    getConfig().publicRuntimeConfig.host
+);
+console.log("-> HOST", HOST);
 
 class Nakama {
     private client: Client = new Client("defaultkey", HOST, "7350");
@@ -44,6 +51,7 @@ class Nakama {
 
     reconnect = async () => {
         const matchID = retrieveInStorage("matchID");
+        this.matchID = matchID;
         await this.socket.connect(this.session, true);
         await this.socket.joinMatch(matchID);
     };
@@ -53,7 +61,6 @@ class Nakama {
     }
 
     findMatch = async () => {
-        // ep4
         const rpcid = "find_match";
         const matches = await this.client.rpc(this.session, rpcid, {});
         this.matchID = (matches.payload as { matchIds: string[] }).matchIds[0];
