@@ -5,6 +5,7 @@ COPY . .
 # Set environment variables
 
 ENV NODE_ENV production
+RUN npm config set registry http://registry.npm.taobao.org/
 # RUN yarn config set registry https://registry.npm.taobao.org/
 RUN npm install
 RUN npm run build
