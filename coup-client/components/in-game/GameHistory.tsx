@@ -26,6 +26,7 @@ export const GameHistory = () => {
     const [matchNotFound, setMatchNotFound] = useState(false);
     const router = useRouter();
     const handleReconnect = useCallback(() => {
+        let timeout: ReturnType<typeof setTimeout>;
         nakamaClient.restoreSessionOrAuthenticate().then(() => {
             nakamaClient
                 .reconnect()
@@ -35,12 +36,13 @@ export const GameHistory = () => {
                 .catch((err) => {
                     if (err.message === "Match not found") {
                         setMatchNotFound(true);
-                        setTimeout(() => {
+                        timeout = setTimeout(() => {
                             router.push("/");
                         }, 3000);
                     }
                 });
         });
+        return () => clearTimeout(timeout);
     }, []);
 
     const infoContainer = useRef(null);
@@ -77,7 +79,10 @@ export const GameHistory = () => {
             {matchNotFound && "比赛已结束，即将返回首页"}
             <Root ref={infoContainer}>
                 {infos.map((info, index) => (
-                    <div dangerouslySetInnerHTML={{ __html: info }} />
+                    <div key={index}>
+                        <div dangerouslySetInnerHTML={{ __html: info }} />
+                        <Divider />
+                    </div>
                 ))}
             </Root>
         </Box>
