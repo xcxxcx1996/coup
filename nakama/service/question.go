@@ -9,7 +9,6 @@ import (
 )
 
 func (serv *MatchService) Questioning(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) (err error) {
-	// 质疑
 
 	msg := &api.Question{}
 
@@ -17,18 +16,19 @@ func (serv *MatchService) Questioning(dispatcher runtime.MatchDispatcher, messag
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, nil, nil, true)
 		return
 	}
-	// 质疑的判断
+	// 质疑
 	if msg.IsQuestion {
 		info := fmt.Sprintf("%v questioned the action.", message.GetUsername())
 		SendNotification(info, dispatcher)
 		if state.ValidQuestion() {
 			// 质疑成功让某人弃牌
-			info := fmt.Sprintf("%v question successful and %v is discarding.", message.GetUsername(), state.GetPlayerNameByID(state.CurrentPlayerID))
-			SendNotification(info, dispatcher)
 			action, _ := state.Actions.Pop()
-			// 中止
+			info := fmt.Sprintf("%v question successful and %v is discarding.", message.GetUsername(), state.GetPlayerNameByID(action.GetActor()))
+			SendNotification(info, dispatcher)
+
 			action.Stop(dispatcher, state)
 			state.EnterDicardState(action.GetActor())
+			
 
 		} else {
 			// 质疑失败 自己进入弃牌
@@ -38,8 +38,10 @@ func (serv *MatchService) Questioning(dispatcher runtime.MatchDispatcher, messag
 		}
 		return
 	} else {
+
 		// 不质疑
 		// 如果下一个是当前行动人，则说明循环了一圈，退出Question，进入刺杀阶段
+
 		info := fmt.Sprintf("%v didn't question.", message.GetUsername())
 		SendNotification(info, dispatcher)
 		end := state.NextQuestionor()

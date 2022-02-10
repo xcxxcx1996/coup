@@ -14,8 +14,8 @@ type Assassin struct {
 }
 
 func (a Assassin) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) error {
+	//
 	// 获得信息、核验
-
 	msg := &api.Assassin{}
 	err := ValidAction(state, message, api.State_START, msg)
 	// 推进行动
@@ -28,7 +28,6 @@ func (a Assassin) Start(dispatcher runtime.MatchDispatcher, message runtime.Matc
 	state.Actions.Push(a)
 
 	//后处理
-
 	info := fmt.Sprintf("%v want to assassin %v ", message.GetUsername(), state.GetPlayerNameByID(a.Assassinated))
 	SendNotification(info, dispatcher)
 	state.EnterQuestion()
@@ -37,6 +36,8 @@ func (a Assassin) Start(dispatcher runtime.MatchDispatcher, message runtime.Matc
 
 // 1. 没人质疑，2. 有人质疑，但失败
 func (a Assassin) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model.MatchState) error {
+
+	state.Actions.Push(a)
 	info := fmt.Sprintln("question end, deny start")
 	SendNotification(info, dispatcher)
 	state.EnterDenyAssassin(a.Assassinated)

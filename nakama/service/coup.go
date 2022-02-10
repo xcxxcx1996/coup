@@ -16,9 +16,13 @@ func (serv *MatchService) Coup(dispatcher runtime.MatchDispatcher, message runti
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, nil, nil, true)
 		return
 	}
-
+	err = state.LoseCoins(msg.PlayerId, 7)
+	if err != nil {
+		return
+	}
 	state.EnterDicardState(msg.PlayerId)
 	info := fmt.Sprintf("%v launching a coup to %v", message.GetUsername(), state.GetPlayerNameByID(msg.PlayerId))
 	SendNotification(info, dispatcher)
 	return nil
+
 }

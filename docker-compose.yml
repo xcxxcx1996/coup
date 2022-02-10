@@ -46,9 +46,7 @@ services:
       - "7351:7351"
     restart: unless-stopped
   client:
-    build:
-      context: ./coup-client
-      dockerfile: Dockerfile
+    build: ./coup-client/
     ports:
       - "4000:3000"
     container_name: coup-client

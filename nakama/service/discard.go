@@ -35,7 +35,6 @@ func (serv *MatchService) Discard(dispatcher runtime.MatchDispatcher, message ru
 		SendNotification(info, dispatcher)
 		buf, _ := global.Marshaler.Marshal(&api.Dead{Player: state.PlayerInfos[message.GetUserId()]})
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_DEAD), buf, nil, nil, true)
-
 		// 判断冠军
 		if len(state.PlayerSequence) == 1 {
 			state.Playing = false
@@ -50,10 +49,10 @@ func (serv *MatchService) Discard(dispatcher runtime.MatchDispatcher, message ru
 	}
 
 	if !state.ActionComplete {
-		action, _ := state.Actions.Pop()
-		//如果行动是阻止，那么
+		//
+		action, e := state.Actions.Pop()
 		action.AfterQuestion(dispatcher, state)
-		return
+		return e
 	}
 
 	state.NextTurn()

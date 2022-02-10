@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"log"
 	"math/rand"
 	"time"
 
@@ -20,7 +21,7 @@ const (
 
 	tickRate       = 5
 	MAX_PLAYER_NUM = 2
-	maxEmptySec    = 30
+	maxEmptySec    = 5
 	// delayBetweenGamesSec = 5
 	turnTimeFastSec   = 10
 	nextStartSec      = 5
@@ -76,6 +77,7 @@ func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logg
 			return s, true, ""
 		} else {
 			// User attempting to join from 2 different devices at the same time.
+			log.Print("重新加入")
 			return s, false, "already joined"
 		}
 	}
@@ -93,8 +95,6 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 
 	s := state.(*model.MatchState)
 
-	// t := time.Now().UTC()
-
 	for _, presence := range Presences {
 		s.EmptyTicks = 0
 		s.Presences[presence.GetUserId()] = presence
@@ -104,6 +104,15 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 		// Check if we must send a message to this user to update them on the current game state.
 		var opCode api.OpCode
 		var msg proto.Message
+		if s.Playing {
+			// There's a game still currently in progress, the player is re-joining after a disconnect. Give them a state update.
+			opCode = api.OpCode_OPCODE_UPDATE
+			msg = &api.Update{
+				PlayerInfos:     s.PlayerInfos,
+				CurrentPlayerId: s.CurrentPlayerID,
+				Message:         "reconnect",
+			}
+		}
 
 		// Send a message to the user that just joined, if one is needed based on the logic above.
 		if msg != nil {
@@ -132,8 +141,8 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 
 func (m *MatchHandler) MatchLeave(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, Presences []runtime.Presence) interface{} {
 	s := state.(*model.MatchState)
-
 	for _, presence := range Presences {
+		logger.Warn("%v leaves match", presence.GetUserId())
 		s.Presences[presence.GetUserId()] = nil
 	}
 

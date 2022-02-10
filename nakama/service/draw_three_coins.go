@@ -22,7 +22,6 @@ func (a DrawThreeCoins) Start(dispatcher runtime.MatchDispatcher, message runtim
 	state.Actions.Push(a)
 	info := fmt.Sprintf("%v claims the barron and want to gain 3 coins.", message.GetUsername())
 	SendNotification(info, dispatcher)
-
 	state.EnterQuestion()
 	return
 }
