@@ -48,10 +48,10 @@ services:
   client:
     build: ./coup-client/
     ports:
-      - "4000:3000"
+      - "3000:3000"
     container_name: coup-client
     environment:
-      - HOST=backend
+      - HOST=101.200.146.166
     depends_on:
       - nakama
     volumes:
