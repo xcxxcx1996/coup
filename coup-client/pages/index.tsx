@@ -22,6 +22,7 @@ const Home: NextPage = () => {
         },
         [setCounter]
     );
+
     useEffect(() => {
         nakamaClient.socket.onmatchdata = matchDataHandler;
         return () => {

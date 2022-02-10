@@ -11,42 +11,12 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { gameContext } from "../../contexts/gameContext";
 import { nakamaClient } from "../../utils/nakama";
 import { rolesMap } from "../../constants";
-import { State } from "../../constants/state";
 import { IUser } from "./UserCarousel";
 import { ChangeCardDialog } from "./ChangeCardDialog";
 import { useRouter } from "next/router";
-
-export const isStateIdle = (playerState: number): boolean => {
-    return playerState === State.IDLE;
-};
-
-export const isStateQuestion = (playerState: number): boolean => {
-    return playerState === State.QUESTION;
-};
-
-export const isStateDenyMoney = (playerState: number): boolean => {
-    return playerState === State.DENY_MONEY;
-};
-
-export const isStateDenyAssassin = (playerState: number): boolean => {
-    return playerState === State.DENY_ASSASSIN;
-};
-
-export const isStateDenySteal = (playerState: number): boolean => {
-    return playerState === State.DENY_STEAL;
-};
-
-export const isStateDiscard = (playerState: number): boolean => {
-    return playerState === State.DISCARD;
-};
-
-export const isStateStart = (playerState: number): boolean => {
-    return playerState === State.START;
-};
-
-export const isStateChooseCard = (playerState: number): boolean => {
-    return playerState === State.CHOOSE_CARD;
-};
+import { useAbility } from "../../hooks/useAbility";
+import { isStateChooseCard } from "../../utils/countState";
+import { useControlPanel } from "../../hooks/useControlPanel";
 
 export interface IMenuItem {
     text: string;
@@ -153,12 +123,7 @@ export const AbilityDialog = (props: AbilityProps) => {
     const { open, handleClose } = props;
     const { users, client } = useContext(gameContext);
     const targetUsers = users.filter((user: IUser) => user.id !== client.id);
-    const clientState = client.state;
-    const isIdle = isStateIdle(clientState);
-    const isStart = isStateStart(clientState);
-    const isDenyMoney = isStateDenyMoney(clientState);
-    const isDenyAssassin = isStateDenyAssassin(clientState);
-    const isDenySteal = isStateDenySteal(clientState);
+    const disabled = useAbility();
     const handleClick = (ability: () => Promise<void>) => {
         return async () => {
             await ability();
@@ -196,12 +161,12 @@ export const AbilityDialog = (props: AbilityProps) => {
                     ]}
                     btnWidth={250}
                     menuItemWidth={250}
-                    disabled={isIdle || !isDenyAssassin}
+                    disabled={disabled.denyAssassin}
                 />
                 <AbilityBtn
                     text="男爵（收3金币）"
                     onClick={handleClick(nakamaClient.drawThreeCoins)}
-                    disabled={isIdle || !isStart}
+                    disabled={disabled.drawThreeCoins}
                 />
                 <MenuButton
                     text={"男爵（阻止收2金币）"}
@@ -221,12 +186,12 @@ export const AbilityDialog = (props: AbilityProps) => {
                     ]}
                     btnWidth={250}
                     menuItemWidth={250}
-                    disabled={isIdle || !isDenyMoney}
+                    disabled={disabled.denyMoney}
                 />
                 <AbilityBtn
                     text="大使（换牌）"
                     onClick={handleClick(nakamaClient.changeCard)}
-                    disabled={isIdle || !isStart}
+                    disabled={disabled.changeCard}
                 />
                 <MenuButton
                     text={"大使（阻止偷金币）"}
@@ -246,7 +211,7 @@ export const AbilityDialog = (props: AbilityProps) => {
                     ]}
                     btnWidth={250}
                     menuItemWidth={250}
-                    disabled={isIdle || !isDenySteal}
+                    disabled={disabled.denySteal}
                 />
                 <MenuButton
                     text={"队长（偷2金币）"}
@@ -258,7 +223,7 @@ export const AbilityDialog = (props: AbilityProps) => {
                     }))}
                     btnWidth={250}
                     menuItemWidth={250}
-                    disabled={isIdle || !isStart}
+                    disabled={disabled.stealCoins}
                 />
                 <MenuButton
                     text={"队长（阻止偷金币）"}
@@ -278,7 +243,7 @@ export const AbilityDialog = (props: AbilityProps) => {
                     ]}
                     btnWidth={250}
                     menuItemWidth={250}
-                    disabled={isIdle || !isDenySteal}
+                    disabled={disabled.denySteal}
                 />
                 <MenuButton
                     text={"刺客（刺杀）"}
@@ -288,7 +253,7 @@ export const AbilityDialog = (props: AbilityProps) => {
                     }))}
                     btnWidth={250}
                     menuItemWidth={250}
-                    disabled={isIdle || !isStart}
+                    disabled={disabled.assassin}
                 />
             </Box>
         </Dialog>
@@ -300,12 +265,9 @@ export const ControlPanel = () => {
     const [openChooseCards, setOpenChooseCards] = useState(false);
     const { users, client, gameEnd } = useContext(gameContext);
     const { cards, state } = client;
-    const isIdle = isStateIdle(state);
-    const isQuestion = isStateQuestion(state);
-    const isDiscard = isStateDiscard(state);
-    const isStart = isStateStart(state);
-    const isMustCoup = client.coins >= 10 && isStart;
     const isChooseCard = isStateChooseCard(state);
+    const disabled = useControlPanel();
+
     const router = useRouter();
     const handleClose = () => {
         setOpen(false);
@@ -332,6 +294,12 @@ export const ControlPanel = () => {
         return () => clearTimeout(timeout);
     }, [gameEnd]);
 
+    useEffect(() => {
+        nakamaClient.socket.ondisconnect = (evt: Event) => {
+            console.log("-> evt", evt);
+        };
+    }, []);
+
     return (
         <Box
             sx={{
@@ -349,13 +317,13 @@ export const ControlPanel = () => {
                 ]}
                 text="获取金币"
                 btnWidth={140}
-                disabled={isIdle || !isStart || isMustCoup}
+                disabled={disabled.drawCoins}
             />
             <Button
                 sx={{ width: "140px", m: 1 }}
                 variant="contained"
                 onClick={handleClickOpen}
-                disabled={isIdle || isQuestion || isDiscard || isMustCoup}
+                disabled={disabled.useAbility}
             >
                 使用技能
             </Button>
@@ -372,7 +340,7 @@ export const ControlPanel = () => {
                 ]}
                 text="质疑/不质疑"
                 btnWidth={140}
-                disabled={isIdle || !isQuestion}
+                disabled={disabled.question}
             />
             <MenuButton
                 btnWidth={140}
@@ -383,12 +351,12 @@ export const ControlPanel = () => {
                         text: u.name,
                         onClick: () => nakamaClient.coup(u.id),
                     }))}
-                disabled={isIdle || client.coins < 7 || !isStart}
+                disabled={disabled.coup}
             />
             <MenuButton
                 btnWidth={140}
                 text={"弃牌"}
-                disabled={!isDiscard || isIdle}
+                disabled={disabled.discard}
                 items={cards.map((c) => ({
                     text: rolesMap[c.role],
                     onClick: () => nakamaClient.discardCard(c.id),
