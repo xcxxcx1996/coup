@@ -13,13 +13,18 @@ type Assassin struct {
 	Assassinated string
 }
 
-func (a Assassin) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) error {
+func (a Assassin) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) (err error) {
 	//
 	// 获得信息、核验
 	msg := &api.Assassin{}
-	err := ValidAction(state, message, api.State_START, msg)
+
 	// 推进行动
-	if err != nil {
+	if err = state.LoseCoins(message.GetUserId(), 3); err != nil {
+		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, nil, nil, true)
+		return err
+	}
+
+	if err = ValidAction(state, message, api.State_START, msg); err != nil {
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, nil, nil, true)
 		return err
 	}

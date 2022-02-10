@@ -16,7 +16,7 @@ func (serv *MatchService) Coup(dispatcher runtime.MatchDispatcher, message runti
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, nil, nil, true)
 		return
 	}
-	err = state.LoseCoins(msg.PlayerId, 7)
+	err = state.LoseCoins(message.GetUserId(), 7)
 	if err != nil {
 		return
 	}

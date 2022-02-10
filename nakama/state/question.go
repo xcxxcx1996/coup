@@ -18,7 +18,7 @@ func (s *MatchState) EnterQuestion() {
 		}
 	}
 }
-
+	
 func (s *MatchState) NextQuestionor() (end bool) {
 	nextPlayer := s.GetNextPlayer(s.Currentquestioner)
 	action, _ := s.Actions.Last()

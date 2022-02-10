@@ -17,6 +17,9 @@ func (s *MatchState) LoseCoins(playerId string, coins int32) error {
 	if !ok {
 		return errors.New("no record")
 	}
+	if player.Coins < coins {
+		return errors.New("no enough money")
+	}
 	player.Coins -= (coins)
 	return nil
 }
