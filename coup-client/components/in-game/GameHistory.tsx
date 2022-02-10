@@ -1,8 +1,15 @@
 import { Box, Button, Divider, Theme } from "@mui/material";
-import React, { useCallback, useContext, useEffect, useRef } from "react";
+import React, {
+    useCallback,
+    useContext,
+    useEffect,
+    useRef,
+    useState,
+} from "react";
 import { gameContext } from "../../contexts/gameContext";
 import { nakamaClient } from "../../utils/nakama";
 import { styled } from "@mui/material/styles";
+import { useRouter } from "next/router";
 
 const Root = styled("div")(({ theme }: { theme: Theme }) => ({
     width: "100%",
@@ -14,9 +21,26 @@ const Root = styled("div")(({ theme }: { theme: Theme }) => ({
 }));
 
 export const GameHistory = () => {
-    const { shouldReconnect, infos } = useContext(gameContext);
+    const { shouldReconnect, infos, setShouldReconnect } =
+        useContext(gameContext);
+    const [matchNotFound, setMatchNotFound] = useState(false);
+    const router = useRouter();
     const handleReconnect = useCallback(() => {
-        nakamaClient.reconnect();
+        nakamaClient.restoreSessionOrAuthenticate().then(() => {
+            nakamaClient
+                .reconnect()
+                .then(() => {
+                    setShouldReconnect(false);
+                })
+                .catch((err) => {
+                    if (err.message === "Match not found") {
+                        setMatchNotFound(true);
+                        setTimeout(() => {
+                            router.push("/");
+                        }, 3000);
+                    }
+                });
+        });
     }, []);
 
     const infoContainer = useRef(null);
@@ -50,6 +74,7 @@ export const GameHistory = () => {
                     重连
                 </Button>
             )}
+            {matchNotFound && "比赛已结束，即将返回首页"}
             <Root ref={infoContainer}>
                 {infos.map((info, index) => (
                     <div key={index}>

@@ -1,11 +1,11 @@
 import { Client, Session, Socket } from "@heroiclabs/nakama-js";
 import { OP_CODE } from "../constants/op_code";
 
-const saveInStorage = (key: string, value: string): void => {
+export const saveInStorage = (key: string, value: string): void => {
     localStorage.setItem(key, value);
 };
 
-const retrieveInStorage = (key: string): string => {
+export const retrieveInStorage = (key: string): string => {
     return localStorage.getItem(key);
 };
 
@@ -21,39 +21,31 @@ class Nakama {
     constructor() {}
 
     authenticate = async (email: string) => {
+        const isCreate = email !== retrieveInStorage("email");
         this.session = await this.client.authenticateEmail(
             email,
             this.password,
-            true,
+            isCreate,
             email.split("@").shift()
         );
         const token = this.session.token;
         const refreshToken = this.session.refresh_token;
+        const userId = this.session.user_id;
+        saveInStorage("userId", userId);
         saveInStorage("email", email);
         saveInStorage("token", token);
         saveInStorage("refreshToken", refreshToken);
-        await this.socket.connect(this.session, true);
+    };
+
+    restoreSessionOrAuthenticate = async () => {
+        const email = retrieveInStorage("email");
+        await this.authenticate(email);
     };
 
     reconnect = async () => {
-        const email = retrieveInStorage("email");
-        if (email) {
-            const token = retrieveInStorage("token");
-            const refreshToken = retrieveInStorage("refreshToken");
-            this.session = Session.restore(token, refreshToken);
-            const matchID = retrieveInStorage("matchID");
-            this.socket
-                .connect(this.session, true)
-                .then(() => {
-                    this.socket
-                        .joinMatch(matchID)
-                        .then((result) => {
-                            console.log("-> result", result);
-                        })
-                        .catch((err) => console.log("join failed", err));
-                })
-                .catch((err) => console.log(err));
-        }
+        const matchID = retrieveInStorage("matchID");
+        await this.socket.connect(this.session, true);
+        await this.socket.joinMatch(matchID);
     };
 
     getUserEmail() {
@@ -66,6 +58,7 @@ class Nakama {
         const matches = await this.client.rpc(this.session, rpcid, {});
         this.matchID = (matches.payload as { matchIds: string[] }).matchIds[0];
         saveInStorage("matchID", this.matchID);
+        await this.socket.connect(this.session, true);
         await this.socket.joinMatch(this.matchID);
     };
 
@@ -108,11 +101,9 @@ class Nakama {
     };
 
     chooseCard = async (cards: string[]) => {
-        await this.socket.sendMatchState(
-            this.matchID,
-            OP_CODE.CHOOSE_CARD,
-            {cards:cards}
-        );
+        await this.socket.sendMatchState(this.matchID, OP_CODE.CHOOSE_CARD, {
+            cards,
+        });
     };
 
     denySteal = async (isDeny: boolean, role: string) => {

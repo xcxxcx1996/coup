@@ -1,6 +1,13 @@
-import { createContext, FC, useEffect, useState } from "react";
+import {
+    createContext,
+    Dispatch,
+    FC,
+    SetStateAction,
+    useEffect,
+    useState,
+} from "react";
 import { IUser } from "../components/in-game/UserCarousel";
-import { nakamaClient } from "../utils/nakama";
+import { nakamaClient, retrieveInStorage } from "../utils/nakama";
 import { MatchData } from "@heroiclabs/nakama-js/socket";
 import { OP_CODE } from "../constants/op_code";
 import { ROLES, rolesMap } from "../constants";
@@ -10,17 +17,27 @@ export interface GameContext {
     currentPlayer: PlayerInfo;
     timeLeft: number;
     shouldReconnect: boolean;
+    setShouldReconnect: Dispatch<SetStateAction<boolean>>;
     chooseCards: ICard[];
     infos: string[];
     client: PlayerInfo;
     gameEnd: boolean;
 }
 
+const initialPlayer: PlayerInfo = {
+    id: "",
+    coins: 0,
+    cards: [],
+    name: "",
+    state: 0,
+};
+
 export const gameContext = createContext<GameContext>({
     users: null,
     currentPlayer: null,
     timeLeft: null,
     shouldReconnect: null,
+    setShouldReconnect: null,
     chooseCards: null,
     infos: [],
     client: null,
@@ -60,14 +77,6 @@ export const transformPlayerInfos = (
     }));
 };
 
-const initialPlayer: PlayerInfo = {
-    id: "",
-    coins: 0,
-    cards: [],
-    name: "",
-    state: 0,
-};
-
 export const GameContextProvider: FC = ({ children }) => {
     const [users, setUsers] = useState<IUser[]>([]);
     const [currentPlayer, setCurrentPlayer] =
@@ -78,7 +87,6 @@ export const GameContextProvider: FC = ({ children }) => {
     const [infos, setInfos] = useState<string[]>([]);
     const [client, setClient] = useState<PlayerInfo>(initialPlayer);
     const [gameEnd, setGameEnd] = useState(false);
-    const userId = nakamaClient?.session ? nakamaClient?.session?.user_id : "";
     useEffect(() => {
         nakamaClient.socket.onmatchdata = (matchData: MatchData) => {
             console.log("-> matchData", matchData);
@@ -86,6 +94,9 @@ export const GameContextProvider: FC = ({ children }) => {
                 case OP_CODE.START:
                 case OP_CODE.UPDATE:
                     const playerInfos: PlayerInfos = matchData.data.playerInfos;
+                    const userId = nakamaClient.session
+                        ? nakamaClient.session.user_id
+                        : retrieveInStorage("userId");
                     const currentPlayerId: string =
                         matchData.data.currentPlayerId;
                     const currentPlayer = playerInfos[currentPlayerId];
@@ -113,15 +124,24 @@ export const GameContextProvider: FC = ({ children }) => {
                     setGameEnd(true);
             }
         };
+        return () => {
+            nakamaClient.socket.disconnect(true);
+        };
     }, []);
 
     useEffect(() => {
         if (!nakamaClient.session) {
             setShouldReconnect(true);
-        } else {
-            setShouldReconnect(false);
         }
     }, [nakamaClient.session, setShouldReconnect]);
+
+    useEffect(() => {
+        nakamaClient.socket.ondisconnect = (evt: Event) => {
+            if (evt.type === "close") {
+                setShouldReconnect(true);
+            }
+        };
+    }, []);
 
     return (
         <gameContext.Provider
@@ -130,6 +150,7 @@ export const GameContextProvider: FC = ({ children }) => {
                 currentPlayer,
                 timeLeft,
                 shouldReconnect,
+                setShouldReconnect,
                 client,
                 chooseCards,
                 infos,

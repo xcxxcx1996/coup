@@ -294,12 +294,6 @@ export const ControlPanel = () => {
         return () => clearTimeout(timeout);
     }, [gameEnd]);
 
-    useEffect(() => {
-        nakamaClient.socket.ondisconnect = (evt: Event) => {
-            console.log("-> evt", evt);
-        };
-    }, []);
-
     return (
         <Box
             sx={{
