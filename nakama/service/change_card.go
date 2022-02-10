@@ -28,7 +28,7 @@ func (c ChangeCard) Start(dispatcher runtime.MatchDispatcher, message runtime.Ma
 	c.message = message
 	state.Actions.Push(c)
 
-	info := fmt.Sprintf(`<p><span style={{ color: "red" }}>%v</span> claims the <span style={{ color: "red" }}>DIPLOMAT</span> and want to change the card.</p >`, message.GetUsername())
+	info := fmt.Sprintf(`<p><span style="color:red;">%v</span> claims the <span style="color:red;">DIPLOMAT</span> and want to change the card.</p >`, message.GetUsername())
 	SendNotification(info, dispatcher)
 
 	// question状态

@@ -77,10 +77,7 @@ export const GameHistory = () => {
             {matchNotFound && "比赛已结束，即将返回首页"}
             <Root ref={infoContainer}>
                 {infos.map((info, index) => (
-                    <div key={index}>
-                        {info}
-                        <Divider />
-                    </div>
+                    <div dangerouslySetInnerHTML={{ __html: info }} />
                 ))}
             </Root>
         </Box>

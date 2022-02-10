@@ -20,7 +20,7 @@ func (a DrawThreeCoins) Start(dispatcher runtime.MatchDispatcher, message runtim
 	}
 	a.message = message
 	state.Actions.Push(a)
-	info := fmt.Sprintf(`<p><span style={{ color: "red" }}>%v</span> claims the <span style={{ color: "red" }}>BARON</span> and want to gain <span style={{ color: "red" }}>3</span> coins.</p >`, message.GetUsername())
+	info := fmt.Sprintf(`<p><span style="color:red;">%v</span> claims the <span style="color:red;">BARON</span> and want to gain <span style="color:red;">3</span> coins.</p >`, message.GetUsername())
 	SendNotification(info, dispatcher)
 	state.EnterQuestion()
 	return
@@ -32,7 +32,7 @@ func (a DrawThreeCoins) AfterQuestion(dispatcher runtime.MatchDispatcher, state 
 	if err != nil {
 		return
 	}
-	info := fmt.Sprintf(`<p><span style={{ color: "red" }}>%v</span> successful gain 3 coins.</p >`, a.message.GetUsername())
+	info := fmt.Sprintf(`<p><span style="color:red;">%v</span> successful gain 3 coins.</p >`, a.message.GetUsername())
 	SendNotification(info, dispatcher)
 	state.NextTurn()
 	return
@@ -46,7 +46,7 @@ func (a DrawThreeCoins) AfterDeny(dispatcher runtime.MatchDispatcher, state *mod
 // 冒充公爵被质疑成功了
 func (a DrawThreeCoins) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
 	state.ActionComplete = true
-	info := fmt.Sprintf(`<p><span style={{ color: "red" }}>%v</span> was denied to get coins.</p >`, a.message.GetUsername())
+	info := fmt.Sprintf(`<p><span style="color:red;">%v</span> was denied to get coins.</p >`, a.message.GetUsername())
 	SendNotification(info, dispatcher)
 	return
 }

@@ -22,14 +22,14 @@ func (serv *MatchService) Discard(dispatcher runtime.MatchDispatcher, message ru
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_REJECTED), nil, nil, nil, true)
 		return
 	}
-	info := fmt.Sprintf(`<p><span style={{ color: "red" }}>%v</span> discard the <span style={{ color: "red" }}>%v</span>.</p >`, message.GetUsername(), discard.Role)
+	info := fmt.Sprintf(`<p><span style="color:red;">%v</span> discard the <span style="color:red;">%v</span>.</p >`, message.GetUsername(), discard.Role)
 	SendNotification(info, dispatcher)
 
 	// 判断玩家是否会死
 	alive, _ := state.Alive(message.GetUserId())
 	if !alive {
 		state.EliminatePlayer(message.GetUserId())
-		info := fmt.Sprintf(`<p><span style={{ color: "red" }}>%v</span> was dead.</p >`, message.GetUsername())
+		info := fmt.Sprintf(`<p><span style="color:red;">%v</span> was dead.</p >`, message.GetUsername())
 		SendNotification(info, dispatcher)
 		buf, _ := global.Marshaler.Marshal(&api.Dead{Player: state.PlayerInfos[message.GetUserId()]})
 		_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_DEAD), buf, nil, nil, true)

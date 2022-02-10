@@ -43,7 +43,7 @@ func (d DenySteal) Start(dispatcher runtime.MatchDispatcher, message runtime.Mat
 	d.Victim = ass.Victim
 	d.Thief = ass.Thief
 	state.Actions.Push(d)
-	info := fmt.Sprintf(`<p><span style={{ color: "red" }}>%v</span> claims the <span style={{ color: "red" }}>%v</span> and want to stop stealing.</p >`, message.GetUsername(), d.Role)
+	info := fmt.Sprintf(`<p><span style="color:red;">%v</span> claims the <span style="color:red;">%v</span> and want to stop stealing.</p >`, message.GetUsername(), d.Role)
 	SendNotification(info, dispatcher)
 	state.EnterQuestion()
 	return nil
