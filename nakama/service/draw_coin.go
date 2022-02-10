@@ -31,7 +31,6 @@ func (a DrawCoin) Start(dispatcher runtime.MatchDispatcher, message runtime.Matc
 		state.EnterDenyMoney()
 		return
 	}
-	SendNotification(info, dispatcher)
 	a.AfterDeny(dispatcher, state)
 	state.NextTurn()
 	return
