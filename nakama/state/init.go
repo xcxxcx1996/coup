@@ -20,6 +20,7 @@ func (s *MatchState) Init(deadlineticks int64) {
 
 func (state *MatchState) initPlayer() {
 	state.PlayerInfos = make(map[string]*api.PlayerInfo, 4)
+	state.Players = state.Presences
 	for userID := range state.Presences {
 		var playerinfo = &api.PlayerInfo{
 			State: api.State_IDLE,

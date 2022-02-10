@@ -36,6 +36,8 @@ func (d DenyMoney) Start(dispatcher runtime.MatchDispatcher, message runtime.Mat
 				return errors.New("wrong draw coins action")
 			}
 			ass.AfterDeny(dispatcher, state)
+
+			
 		}
 		return
 	}
@@ -45,7 +47,6 @@ func (d DenyMoney) Start(dispatcher runtime.MatchDispatcher, message runtime.Mat
 	log.Printf("Actions:%v", state.Actions)
 	info := fmt.Sprintf("%v cliam the barron adn want to stop get money.", message.GetUsername())
 	SendNotification(info, dispatcher)
-
 	// question状态
 	state.EnterQuestion()
 	return nil

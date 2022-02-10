@@ -14,6 +14,7 @@ type DenyAssassian struct {
 	Assassinor   string
 }
 
+// 阻止刺杀
 func (d DenyAssassian) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchData, state *model.MatchState) (err error) {
 	msg := &api.Deny{}
 
@@ -36,22 +37,21 @@ func (d DenyAssassian) Start(dispatcher runtime.MatchDispatcher, message runtime
 		return errors.New("wrong action")
 	}
 
-	d.Assassinor = ass.Assassinated
-	d.Assassinated = ass.Assassinor
+	d.Assassinor = ass.Assassinor
+	d.Assassinated = ass.Assassinated
 
 	state.Actions.Push(d)
 
 	info := fmt.Sprintf("%v claim the queen, want to stop the kill", message.GetUsername())
 	SendNotification(info, dispatcher)
 
-	// buf, _ := global.Marshaler.Marshal(&api.ActionInfo{Message: info})
-	// _ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_INFO), buf, nil, nil, true)
 	// question状态
 	state.EnterQuestion()
 	return nil
 }
 
-// 1.我有女王，你们都不质疑我,刺杀行为停止 2. 有人质疑我，我有女王，刺杀行为停止
+// 1.我有女王，你们都不质疑我,刺杀行为停止， 下一个回合
+// 2. 有人质疑我，但是质疑失败，弃牌之后，我有女王，刺杀行为停止，下一个回合
 func (d DenyAssassian) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
 	// 不质疑删除IAction， 然后assain改为 isdeny
 	action, err := state.Actions.Pop()
@@ -72,10 +72,9 @@ func (d DenyAssassian) AfterDeny(dispatcher runtime.MatchDispatcher, state *mode
 	return
 }
 
-// 被质疑成功
+// 阻止刺杀被质疑成功，刺杀进行
 func (d DenyAssassian) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
-	state.Actions.Pop()
-	action, _ := state.Actions.Last()
+	action, err := state.Actions.Pop()
 	ass, ok := action.(Assassin)
 	if !ok {
 		return errors.New("wrong action")

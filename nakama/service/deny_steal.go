@@ -23,10 +23,11 @@ func (d DenySteal) Start(dispatcher runtime.MatchDispatcher, message runtime.Mat
 		return
 	}
 	d.Role = msg.Role
-	// 如果不阻止
+	// 如果不阻止，偷窃进行，下一个回合
 	if !msg.IsDeny {
 		ass, _ := state.Actions.Pop()
 		ass.AfterDeny(dispatcher, state)
+		state.NextTurn()
 		return
 	}
 
@@ -80,14 +81,11 @@ func (d DenySteal) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchSt
 	info := fmt.Sprintln("Deny failed.")
 	SendNotification(info, dispatcher)
 
-	_, err = state.Actions.Pop()
+	action, err := state.Actions.Pop()
 	if err != nil {
 		return
 	}
-	action, err := state.Actions.Last()
-	if err != nil {
-		return
-	}
+
 	steal, ok := action.(Steal)
 	if !ok {
 		return errors.New("wrong action")

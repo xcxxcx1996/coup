@@ -38,10 +38,12 @@ func (serv *MatchService) Dispatch(message runtime.MatchData, state *model.Match
 		err = serv.Coup(dispatcher, message, state)
 	// 女王阻止刺杀
 	case int64(api.OpCode_OPCODE_DENY_KILL):
+		log.Println("deny kill")
 		var action DenyAssassian
 		err = action.Start(dispatcher, message, state)
 	// 男爵阻止拿牌
 	case int64(api.OpCode_OPCODE_DENY_MONEY):
+
 		var action DenyMoney
 		err = action.Start(dispatcher, message, state)
 	// 男爵拿钱
@@ -99,7 +101,7 @@ func (serv *MatchService) DefaultAction(dispatcher runtime.MatchDispatcher, stat
 
 	case api.State_DISCARD:
 		data, _ := global.Marshaler.Marshal(&api.Discard{CardId: state.PlayerInfos[state.CurrentDiscarder].Cards[0].Id})
-		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DISCARD), Data: data, Presence: state.Presences[state.CurrentDiscarder]}
+		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DISCARD), Data: data, Presence: state.Players[state.CurrentDiscarder]}
 
 	case api.State_CHOOSE_CARD:
 		cards := []string{}
@@ -107,23 +109,24 @@ func (serv *MatchService) DefaultAction(dispatcher runtime.MatchDispatcher, stat
 			cards = append(cards, v.Id)
 		}
 		data, _ := global.Marshaler.Marshal(&api.ChangeCardResponse{Cards: cards})
-		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_CHOOSE_CARD), Data: data, Presence: state.Presences[state.CurrentPlayerID]}
+		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_CHOOSE_CARD), Data: data, Presence: state.Players[state.CurrentPlayerID]}
 
 	case api.State_START:
 		data, _ := global.Marshaler.Marshal(&api.GetCoin{Coins: 1})
-		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DRAW_COINS), Data: data, Presence: state.Presences[state.CurrentPlayerID]}
+		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DRAW_COINS), Data: data, Presence: state.Players[state.CurrentPlayerID]}
 
 	case api.State_DENY_MONEY:
 		data, _ := global.Marshaler.Marshal(&api.Deny{IsDeny: false})
-		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DENY_MONEY), Data: data, Presence: state.Presences[state.CurrentDenyer]}
+		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DENY_MONEY), Data: data, Presence: state.Players[state.CurrentDenyer]}
 
 	case api.State_DENY_STEAL:
 		data, _ := global.Marshaler.Marshal(&api.Deny{IsDeny: false})
-		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DENY_STEAL), Data: data, Presence: state.Presences[state.CurrentDenyer]}
+		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DENY_STEAL), Data: data, Presence: state.Players[state.CurrentDenyer]}
 
 	case api.State_DENY_ASSASSIN:
 		data, _ := global.Marshaler.Marshal(&api.Deny{IsDeny: false})
-		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DENY_KILL), Data: data, Presence: state.Presences[state.CurrentDenyer]}
+		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DENY_KILL), Data: data, Presence: state.Players[state.CurrentDenyer]}
+
 	}
 
 	serv.Dispatch(message, state, dispatcher)
@@ -183,5 +186,8 @@ func ValidAction(state *model.MatchState, message runtime.MatchData, allowState 
 	if !ok {
 		return errors.New("wrong state")
 	}
+
+	// 额外的验证
+
 	return nil
 }

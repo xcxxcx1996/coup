@@ -33,14 +33,17 @@ func (a Steal) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchDa
 	return
 }
 
-// 1. 没人质疑，2. 有人质疑，但失败
+// 1. 没人质疑 不会删，2. 有人质疑，但是失败，这个时候会把action提出来
 func (a Steal) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
+	state.Actions.Push(a)
 	info := fmt.Sprintln("question end, enter deny.")
 	SendNotification(info, dispatcher)
 	state.EnterDenySteal(a.Victim)
 	return nil
 }
 
+//1. 没人阻止，偷钱，下一个回合，
+//2 .有人阻止，但是阻止失败，deny steal
 func (a Steal) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
 	state.ActionComplete = true
 	info := fmt.Sprintln("deny end, steal")
@@ -60,7 +63,7 @@ func (a Steal) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.MatchS
 		}
 	} else {
 		state.LoseCoins(a.Victim, StealCoinsNum)
-		state.GainCoins(a.Thief, resCoins)
+		state.GainCoins(a.Thief, StealCoinsNum)
 	}
 	return
 }

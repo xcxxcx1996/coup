@@ -1,6 +1,8 @@
 package service
 
 import (
+	"fmt"
+
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
 	model "github.com/xcxcx1996/coup/state"
@@ -30,6 +32,8 @@ func (serv *MatchService) CompleteChangeCard(dispatcher runtime.MatchDispatcher,
 			}
 		}
 	}
+	info := fmt.Sprintf("%v complete the card change.", message.GetUsername())
+	SendNotification(info, dispatcher)
 	state.PlayerInfos[state.CurrentPlayerID].Cards = reservedCards
 	state.SufferDeck()
 	//下一个回合

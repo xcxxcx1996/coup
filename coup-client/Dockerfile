@@ -9,4 +9,4 @@ ENV NODE_ENV production
 RUN npm install
 RUN npm run build
 EXPOSE 3000
-CMD [ "yarn", "start" ]
+CMD [ "npm", "run", "start" ]

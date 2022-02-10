@@ -10,26 +10,16 @@ import (
 type MatchState struct {
 	// ** 场面状态
 	//剩余卡牌
-	Deck           []*api.Card
-	PlayerSequence []string
-	Presences      map[string]runtime.Presence
-	PlayerInfos    map[string]*api.PlayerInfo
-
-	//玩家id对应的信息（卡牌，钱）
-
-	//功能
-	Random     *rand.Rand
-	Label      *MatchLabel
-	EmptyTicks int
-
-	// Currently connected users, or reserved spaces.
-	// Number of users currently in the process of connecting to the match.
+	Deck            []*api.Card
+	PlayerSequence  []string
+	Presences       map[string]runtime.Presence
+	PlayerInfos     map[string]*api.PlayerInfo
+	Players         map[string]runtime.Presence
+	Random          *rand.Rand
+	Label           *MatchLabel
+	EmptyTicks      int
 	JoinsInProgress int
-	// // 质疑环节
-	// IsQuestion bool
-	// // 阻止环节
-	// IsDeny    bool
-	// IsDiscard bool
+
 	State api.State
 	// True if there's a game currently in progress.
 	Playing bool
@@ -45,8 +35,6 @@ type MatchState struct {
 	DeadlineRemainingTicks int64
 	MaxDeadlineTicks       int64
 	Message                string
-	// The winner of the current game.
-	// winner runtime.Presence
 }
 
 func (s *MatchState) NextTurn() {

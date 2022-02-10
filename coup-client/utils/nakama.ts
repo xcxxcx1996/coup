@@ -111,7 +111,7 @@ class Nakama {
         await this.socket.sendMatchState(
             this.matchID,
             OP_CODE.CHOOSE_CARD,
-            cards
+            {cards:cards}
         );
     };
 
