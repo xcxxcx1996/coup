@@ -21,7 +21,7 @@ func (serv *MatchService) Coup(dispatcher runtime.MatchDispatcher, message runti
 		return
 	}
 	state.EnterDicardState(msg.PlayerId)
-	info := fmt.Sprintf("%v launching a coup to %v", message.GetUsername(), state.GetPlayerNameByID(msg.PlayerId))
+	info := fmt.Sprintf(`<p><span style={{ color: "red" }}>%v</span> launch a coup to <span style={{ color: "red" }}>%v</span></p>`, message.GetUsername(), state.GetPlayerNameByID(msg.PlayerId))
 	SendNotification(info, dispatcher)
 	return nil
 

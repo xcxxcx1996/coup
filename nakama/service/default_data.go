@@ -1,6 +1,28 @@
 package service
 
-import "github.com/heroiclabs/nakama-common/runtime"
+import (
+	"github.com/heroiclabs/nakama-common/runtime"
+	"github.com/xcxcx1996/coup/api"
+)
+
+type DefaultPresence struct {
+	runtime.PresenceMeta
+	PlayerInfo *api.PlayerInfo
+}
+
+func (d DefaultPresence) GetUserId() string {
+	return d.PlayerInfo.Id
+}
+func (d DefaultPresence) GetUsername() string {
+	return d.PlayerInfo.Name
+}
+
+func (d DefaultPresence) GetSessionId() string {
+	return ""
+}
+func (d DefaultPresence) GetNodeId() string {
+	return ""
+}
 
 type DefaultActionData struct {
 	runtime.Presence

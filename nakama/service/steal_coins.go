@@ -27,7 +27,7 @@ func (a Steal) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchDa
 	a.Thief = message.GetUserId()
 
 	state.Actions.Push(a)
-	info := fmt.Sprintf("%v claims the Captain, want to steal %v coins", message.GetUsername(), state.GetPlayerNameByID(a.Victim))
+	info := fmt.Sprintf(`<p><span style={{ color: "red" }}>%v</span> claims the <span style={{ color: "red" }}>CAPTAIN</span> and want to steal <span style={{ color: "red" }}>%v</span> coins.</p >`, message.GetUsername(), state.GetPlayerNameByID(a.Victim))
 	SendNotification(info, dispatcher)
 	state.EnterQuestion()
 	return
@@ -36,7 +36,7 @@ func (a Steal) Start(dispatcher runtime.MatchDispatcher, message runtime.MatchDa
 // 1. 没人质疑 不会删，2. 有人质疑，但是失败，这个时候会把action提出来
 func (a Steal) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
 	state.Actions.Push(a)
-	info := fmt.Sprintln("question end, enter deny.")
+	info := fmt.Sprintln(`<p>Questioning ends, Denying begins.</p >`)
 	SendNotification(info, dispatcher)
 	state.EnterDenySteal(a.Victim)
 	return nil
@@ -46,7 +46,7 @@ func (a Steal) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model.Ma
 //2 .有人阻止，但是阻止失败，deny steal
 func (a Steal) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
 	state.ActionComplete = true
-	info := fmt.Sprintln("deny end, steal")
+	info := fmt.Sprintln(`<p><span style={{ color: "green" }}>Successful</span> theft and refusal to end.</p >`)
 	SendNotification(info, dispatcher)
 	resCoins, err := state.GetCoins(a.Victim)
 	if err != nil {
@@ -70,7 +70,7 @@ func (a Steal) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.MatchS
 
 func (a Steal) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
 	state.ActionComplete = true
-	info := fmt.Sprintln("steal was stoped")
+	info := fmt.Sprintln(`<p>Steal was <span style={{ color: "red" }}>stoped</span>.</p >`)
 	SendNotification(info, dispatcher)
 	return
 }

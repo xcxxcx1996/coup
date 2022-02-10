@@ -8,7 +8,6 @@ import (
 	"github.com/xcxcx1996/coup/api"
 	"github.com/xcxcx1996/coup/global"
 	model "github.com/xcxcx1996/coup/state"
-	"github.com/xcxcx1996/coup/utils"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -38,7 +37,6 @@ func (serv *MatchService) Dispatch(message runtime.MatchData, state *model.Match
 		err = serv.Coup(dispatcher, message, state)
 	// 女王阻止刺杀
 	case int64(api.OpCode_OPCODE_DENY_KILL):
-		log.Println("deny kill")
 		var action DenyAssassian
 		err = action.Start(dispatcher, message, state)
 	// 男爵阻止拿牌
@@ -92,41 +90,62 @@ func (serv *MatchService) Dispatch(message runtime.MatchData, state *model.Match
 
 // 默认行为
 func (serv *MatchService) DefaultAction(dispatcher runtime.MatchDispatcher, state *model.MatchState) {
-	var message DefaultActionData
+	var message = DefaultActionData{}
+
 	switch state.State {
 
 	case api.State_QUESTION:
 		data, _ := global.Marshaler.Marshal(&api.Question{IsQuestion: false})
-		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_QUESTION), Data: data, Presence: state.Presences[state.Currentquestioner]}
+		presence := DefaultPresence{
+			PlayerInfo: state.PlayerInfos[state.Currentquestioner],
+		}
+		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_QUESTION), Data: data, Presence: presence}
 
 	case api.State_DISCARD:
 		data, _ := global.Marshaler.Marshal(&api.Discard{CardId: state.PlayerInfos[state.CurrentDiscarder].Cards[0].Id})
-		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DISCARD), Data: data, Presence: state.Players[state.CurrentDiscarder]}
+		presence := DefaultPresence{
+			PlayerInfo: state.PlayerInfos[state.CurrentDiscarder],
+		}
+		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DISCARD), Data: data, Presence: presence}
 
 	case api.State_CHOOSE_CARD:
 		cards := []string{}
 		for _, v := range state.PlayerInfos[state.CurrentPlayerID].Cards {
 			cards = append(cards, v.Id)
 		}
+		presence := DefaultPresence{
+			PlayerInfo: state.PlayerInfos[state.CurrentPlayerID],
+		}
 		data, _ := global.Marshaler.Marshal(&api.ChangeCardResponse{Cards: cards})
-		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_CHOOSE_CARD), Data: data, Presence: state.Players[state.CurrentPlayerID]}
+		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_CHOOSE_CARD), Data: data, Presence: presence}
 
 	case api.State_START:
 		data, _ := global.Marshaler.Marshal(&api.GetCoin{Coins: 1})
-		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DRAW_COINS), Data: data, Presence: state.Players[state.CurrentPlayerID]}
+		presence := DefaultPresence{
+			PlayerInfo: state.PlayerInfos[state.CurrentPlayerID],
+		}
+		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DRAW_COINS), Data: data, Presence: presence}
 
 	case api.State_DENY_MONEY:
 		data, _ := global.Marshaler.Marshal(&api.Deny{IsDeny: false})
-		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DENY_MONEY), Data: data, Presence: state.Players[state.CurrentDenyer]}
+		presence := DefaultPresence{
+			PlayerInfo: state.PlayerInfos[state.CurrentDenyer],
+		}
+		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DENY_MONEY), Data: data, Presence: presence}
 
 	case api.State_DENY_STEAL:
+		presence := DefaultPresence{
+			PlayerInfo: state.PlayerInfos[state.CurrentDenyer],
+		}
 		data, _ := global.Marshaler.Marshal(&api.Deny{IsDeny: false})
-		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DENY_STEAL), Data: data, Presence: state.Players[state.CurrentDenyer]}
+		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DENY_STEAL), Data: data, Presence: presence}
 
 	case api.State_DENY_ASSASSIN:
+		presence := DefaultPresence{
+			PlayerInfo: state.PlayerInfos[state.CurrentDenyer],
+		}
 		data, _ := global.Marshaler.Marshal(&api.Deny{IsDeny: false})
-		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DENY_KILL), Data: data, Presence: state.Players[state.CurrentDenyer]}
-
+		message = DefaultActionData{OpCode: int64(api.OpCode_OPCODE_DENY_KILL), Data: data, Presence: presence}
 	}
 
 	serv.Dispatch(message, state, dispatcher)
@@ -157,16 +176,13 @@ func SendNotification(msg string, dispatcher runtime.MatchDispatcher) {
 
 func ValidAction(state *model.MatchState, message runtime.MatchData, allowState api.State, msg protoreflect.ProtoMessage) (err error) {
 	if msg != nil {
-		log.Printf("message.GetData(): %v", utils.Bytes2String(message.GetData()))
 		err := global.Unmarshaler.Unmarshal(message.GetData(), msg)
 		if err != nil {
-			log.Println("wrong match data")
 			// Client sent bad data.
 			return errors.New("wrong match data")
 		}
 	}
 	if allowState != state.State {
-		log.Println("state:", state.State, "allowState:", allowState)
 		return errors.New("wrong turn")
 	}
 	var ok bool

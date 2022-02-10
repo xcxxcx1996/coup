@@ -18,31 +18,28 @@ func (serv *MatchService) Questioning(dispatcher runtime.MatchDispatcher, messag
 	}
 	// 质疑
 	if msg.IsQuestion {
-		info := fmt.Sprintf("%v questioned the action.", message.GetUsername())
+		info := fmt.Sprintf(`<p><span style={{ color: "red" }}>%v</span> questioned the action.</p >`, message.GetUsername())
 		SendNotification(info, dispatcher)
 		if state.ValidQuestion() {
 			// 质疑成功让某人弃牌
 			action, _ := state.Actions.Pop()
-			info := fmt.Sprintf("%v question successful and %v is discarding.", message.GetUsername(), state.GetPlayerNameByID(action.GetActor()))
+			info := fmt.Sprintf(`<p><span style={{ color: "red" }}>%v</span> question <span style={{ color: "green" }}>successful</span> and <span style={{ color: "red" }}>%v</span> is discarding.</p >`, message.GetUsername(), state.GetPlayerNameByID(action.GetActor()))
 			SendNotification(info, dispatcher)
-
 			action.Stop(dispatcher, state)
 			state.EnterDicardState(action.GetActor())
-			
 
 		} else {
 			// 质疑失败 自己进入弃牌
-			info := fmt.Sprintf("%v question failed, %v is discarding.", message.GetUsername(), message.GetUsername())
+			info := fmt.Sprintf(`<p><span style={{ color: "red" }}>%v</span> question <span style={{ color: "red" }}>failed</span> and <span style={{ color: "red" }}>%v</span> is discarding</p >`, message.GetUsername(), message.GetUsername())
 			SendNotification(info, dispatcher)
 			state.EnterDicardState(message.GetUserId())
 		}
 		return
 	} else {
-
 		// 不质疑
-		// 如果下一个是当前行动人，则说明循环了一圈，退出Question，进入刺杀阶段
+		// 如果下一个是当前行动人，则说明循环了一圈，退出Question，进入刺杀阶段"
 
-		info := fmt.Sprintf("%v didn't question.", message.GetUsername())
+		info := fmt.Sprintf(`<p><span style={{ color: "red" }}>%v</span> didn't question.</p>`, message.GetUsername())
 		SendNotification(info, dispatcher)
 		end := state.NextQuestionor()
 		if end {

@@ -3,7 +3,6 @@ package service
 import (
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/xcxcx1996/coup/api"
@@ -41,10 +40,9 @@ func (d DenyMoney) Start(dispatcher runtime.MatchDispatcher, message runtime.Mat
 		return
 	}
 	// 阻止
-	log.Printf("Actions:%v,deny_action:%v", state.Actions, d)
 	state.Actions.Push(d)
-	log.Printf("Actions:%v", state.Actions)
-	info := fmt.Sprintf("%v cliam the barron adn want to stop get money.", message.GetUsername())
+
+	info := fmt.Sprintf(`<p><span style={{ color: "red" }}>%v</span> claims the <span style={{ color: "red" }}>BARON</span> and want to stop getting money.</p >`, message.GetUsername())
 	SendNotification(info, dispatcher)
 	// question状态
 	state.EnterQuestion()
@@ -53,7 +51,7 @@ func (d DenyMoney) Start(dispatcher runtime.MatchDispatcher, message runtime.Mat
 
 //所有人都不质疑,那么阻止别人拿两块钱
 func (d DenyMoney) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
-	info := fmt.Sprintln("Question end and coins stop.")
+	info := fmt.Sprintln("<p>Questioning ends and Drawing coins stops.</p>")
 	SendNotification(info, dispatcher)
 	action, err := state.Actions.Pop()
 	if err != nil {
@@ -62,7 +60,6 @@ func (d DenyMoney) AfterQuestion(dispatcher runtime.MatchDispatcher, state *mode
 
 	gainCoins, ok := action.(DrawCoin)
 	if !ok {
-		log.Println("error: wrong action")
 		return errors.New("wrong action")
 	}
 	err = gainCoins.Stop(dispatcher, state)
@@ -88,8 +85,9 @@ func (d DenyMoney) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchSt
 	if !ok {
 		return errors.New("wrong action")
 	}
-	info := fmt.Sprintln("deny end, get money excute")
+	info := fmt.Sprintln("<p>Deny ends, Drawing money excutes.</p>")
 	SendNotification(info, dispatcher)
+	//
 	gainCoins.AfterDeny(dispatcher, state)
 	return nil
 }

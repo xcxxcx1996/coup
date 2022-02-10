@@ -41,8 +41,7 @@ func (d DenyAssassian) Start(dispatcher runtime.MatchDispatcher, message runtime
 	d.Assassinated = ass.Assassinated
 
 	state.Actions.Push(d)
-
-	info := fmt.Sprintf("%v claim the queen, want to stop the kill", message.GetUsername())
+	info := fmt.Sprintf(`<p><span style={{ color: "red" }}>%v</span> claims the <span style={{ color: "red" }}>QUEEN</span> and want to stop the kill.</p >`, message.GetUsername())
 	SendNotification(info, dispatcher)
 
 	// question状态
@@ -61,7 +60,7 @@ func (d DenyAssassian) AfterQuestion(dispatcher runtime.MatchDispatcher, state *
 	}
 	ass.Stop(dispatcher, state)
 	// ass.IsDeny = true
-	info := fmt.Sprintln("question end, assassin was stopped")
+	info := fmt.Sprintln("<p>Question end, assassin was stopped.</p>")
 	SendNotification(info, dispatcher)
 	state.NextTurn()
 	return
@@ -74,14 +73,15 @@ func (d DenyAssassian) AfterDeny(dispatcher runtime.MatchDispatcher, state *mode
 
 // 阻止刺杀被质疑成功，刺杀进行
 func (d DenyAssassian) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
-	action, err := state.Actions.Pop()
-	ass, ok := action.(Assassin)
-	if !ok {
-		return errors.New("wrong action")
-	}
-	info := fmt.Sprintln("deny end, assassin excute")
+
+	// action, err := state.Actions.Pop()
+	// ass, ok := action.(Assassin)
+	// if !ok {
+	// 	return errors.New("wrong action")
+	// }
+	info := fmt.Sprintln("<p>Deny end, assassin excute.</p>")
 	SendNotification(info, dispatcher)
-	ass.AfterDeny(dispatcher, state)
+	// ass.AfterDeny(dispatcher, state)
 	return
 }
 

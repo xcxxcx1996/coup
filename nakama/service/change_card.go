@@ -28,7 +28,7 @@ func (c ChangeCard) Start(dispatcher runtime.MatchDispatcher, message runtime.Ma
 	c.message = message
 	state.Actions.Push(c)
 
-	info := fmt.Sprintf("%v claims the diplomat, want to change the card", message.GetUsername())
+	info := fmt.Sprintf(`<p><span style={{ color: "red" }}>%v</span> claims the <span style={{ color: "red" }}>DIPLOMAT</span> and want to change the card.</p >`, message.GetUsername())
 	SendNotification(info, dispatcher)
 
 	// question状态
@@ -47,7 +47,7 @@ func (c ChangeCard) AfterQuestion(dispatcher runtime.MatchDispatcher, state *mod
 		return err
 	}
 	_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_CHOOSE_CARD), buf, []runtime.Presence{c.message}, nil, true)
-	info := fmt.Sprintln("question end, enter choose card")
+	info := fmt.Sprintln("<p>Questioning ends, choosing card action begins.</p>")
 	SendNotification(info, dispatcher)
 	state.EnterChooseCard()
 	return err
@@ -61,7 +61,7 @@ func (c ChangeCard) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.M
 // 被质疑成功，停止
 func (c ChangeCard) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
 	state.ActionComplete = true
-	info := fmt.Sprintln("change card was stoped")
+	info := fmt.Sprintln("<p>Changing card was stoped.</p>")
 	SendNotification(info, dispatcher)
 	return nil
 }

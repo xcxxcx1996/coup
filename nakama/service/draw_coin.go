@@ -24,14 +24,13 @@ func (a DrawCoin) Start(dispatcher runtime.MatchDispatcher, message runtime.Matc
 	a.coins = msg.Coins
 	a.message = message
 
+	info := fmt.Sprintf(`<p><span style={{ color: "red" }}>%v</span> want to gain <span style={{ color: "red" }}>%v</span> coins.</p >`, a.message.GetUsername(), a.coins)
+	SendNotification(info, dispatcher)
 	if a.coins == 2 {
 		state.Actions.Push(a)
-		info := fmt.Sprintf("%v want to gain 2 coins.", a.message.GetUsername())
-		SendNotification(info, dispatcher)
 		state.EnterDenyMoney()
 		return
 	}
-	info := fmt.Sprintf("%v want to gain 1 coins.", a.message.GetUsername())
 	SendNotification(info, dispatcher)
 	a.AfterDeny(dispatcher, state)
 	state.NextTurn()
@@ -51,7 +50,7 @@ func (a DrawCoin) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.Mat
 	if err != nil {
 		return
 	}
-	info := fmt.Sprintf("%v success get the coins.", a.message.GetUsername())
+	info := fmt.Sprintf(`<p><span style={{ color: "red" }}>%v</span> success get <span style={{ color: "red" }}>%v</span> coins.</p >`, a.message.GetUsername(), a.coins)
 	SendNotification(info, dispatcher)
 	return
 }

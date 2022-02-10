@@ -40,12 +40,10 @@ func (d DenySteal) Start(dispatcher runtime.MatchDispatcher, message runtime.Mat
 	if !ok {
 		return errors.New("wrong action")
 	}
-
 	d.Victim = ass.Victim
 	d.Thief = ass.Thief
-
 	state.Actions.Push(d)
-	info := fmt.Sprintf("%v claim the Queen, want to stop the steal action", message.GetUsername())
+	info := fmt.Sprintf(`<p><span style={{ color: "red" }}>%v</span> claims the <span style={{ color: "red" }}>%v</span> and want to stop stealing.</p >`, message.GetUsername(), d.Role)
 	SendNotification(info, dispatcher)
 	state.EnterQuestion()
 	return nil
@@ -54,7 +52,7 @@ func (d DenySteal) Start(dispatcher runtime.MatchDispatcher, message runtime.Mat
 func (d DenySteal) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
 
 	// 不质疑删除IAction， 然后assain改为 isdeny
-	info := fmt.Sprintln("question end, stop steal")
+	info := fmt.Sprintln("<p>Questioning ends, Stealing stops.<p>")
 	SendNotification(info, dispatcher)
 	action, err := state.Actions.Pop()
 	if err != nil {
@@ -78,7 +76,7 @@ func (d DenySteal) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.Ma
 
 func (d DenySteal) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
 
-	info := fmt.Sprintln("Deny failed.")
+	info := fmt.Sprintln("<p>Denying fails.</p>")
 	SendNotification(info, dispatcher)
 
 	action, err := state.Actions.Pop()

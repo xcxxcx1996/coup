@@ -28,7 +28,7 @@ func (a Assassin) Start(dispatcher runtime.MatchDispatcher, message runtime.Matc
 	state.Actions.Push(a)
 
 	//后处理
-	info := fmt.Sprintf("%v want to assassin %v ", message.GetUsername(), state.GetPlayerNameByID(a.Assassinated))
+	info := fmt.Sprintf(`<p><span style={{ color: "red" }}>%v</span> claims the <span style={{ color: "red" }}>ASSASSIN</span> and want to assassin <span style={{ color: "red" }}>%v</span> .</p >`, message.GetUsername(), state.GetPlayerNameByID(a.Assassinated))
 	SendNotification(info, dispatcher)
 	state.EnterQuestion()
 	return nil
@@ -36,9 +36,8 @@ func (a Assassin) Start(dispatcher runtime.MatchDispatcher, message runtime.Matc
 
 // 1. 没人质疑，2. 有人质疑，但失败
 func (a Assassin) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model.MatchState) error {
-
 	state.Actions.Push(a)
-	info := fmt.Sprintln("question end, deny start")
+	info := fmt.Sprintln("<p> Questioning ends, blocking action begins.</p>")
 	SendNotification(info, dispatcher)
 	state.EnterDenyAssassin(a.Assassinated)
 	return nil
@@ -47,7 +46,7 @@ func (a Assassin) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model
 // 玩家进入刺杀阶段
 func (a Assassin) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.MatchState) error {
 	state.ActionComplete = true
-	info := fmt.Sprintln("deny end, action execute")
+	info := fmt.Sprintln(`<p> Deny end, assassin execute.</p>`)
 	SendNotification(info, dispatcher)
 	state.EnterDicardState(a.Assassinated)
 	return nil
@@ -56,7 +55,7 @@ func (a Assassin) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.Mat
 // 行动被停止 1.被成功质疑，2.被阻止
 func (a Assassin) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState) error {
 	state.ActionComplete = true
-	info := fmt.Sprintln("assassin was stopped")
+	info := fmt.Sprintln("<p> Assassin was stopped.</p>")
 	SendNotification(info, dispatcher)
 	return nil
 }
