@@ -77,7 +77,6 @@ func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logg
 			return s, true, ""
 		} else {
 			// User attempting to join from 2 different devices at the same time.
-			log.Print("重新加入")
 			return s, false, "already joined"
 		}
 	}
@@ -105,6 +104,7 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 		var opCode api.OpCode
 		var msg proto.Message
 		if s.Playing {
+			log.Print("重新加入")
 			// There's a game still currently in progress, the player is re-joining after a disconnect. Give them a state update.
 			opCode = api.OpCode_OPCODE_UPDATE
 			msg = &api.Update{
@@ -217,6 +217,7 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 
 	// Keep track of the time remaining for the player to submit their move. Idle players forfeit.
 	if s.Playing {
+		
 		s.DeadlineRemainingTicks--
 		if s.DeadlineRemainingTicks%tickRate == 0 {
 			buf, _ := global.Marshaler.Marshal(&api.Tick{Deadline: s.DeadlineRemainingTicks / tickRate})

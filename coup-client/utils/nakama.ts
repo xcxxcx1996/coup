@@ -9,7 +9,7 @@ export const retrieveInStorage = (key: string): string => {
     return localStorage.getItem(key);
 };
 
-const HOST = process.env.HOST || "localhost";
+const HOST = process.env.NEXT_PUBLIC_HOST || "localhost";
 
 class Nakama {
     private client: Client = new Client("defaultkey", HOST, "7350");
@@ -44,6 +44,7 @@ class Nakama {
 
     reconnect = async () => {
         const matchID = retrieveInStorage("matchID");
+        this.matchID=matchID
         await this.socket.connect(this.session, true);
         await this.socket.joinMatch(matchID);
     };
