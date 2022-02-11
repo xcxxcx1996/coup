@@ -31,7 +31,8 @@ func (s *MatchState) EnterDenySteal(playerID string) {
 // 指定玩家阻止玩家偷钱，我有公爵，你不准拿钱！
 func (s *MatchState) EnterDenyMoney() {
 	s.State = api.State_DENY_MONEY
-	nextPlayer := s.GetNextPlayer(s.CurrentPlayerID)
+	action, _ := s.Actions.Last()
+	nextPlayer := s.GetNextPlayer(action.GetActor())
 	s.CurrentDenyer = nextPlayer
 	for _, p := range s.PlayerInfos {
 		if nextPlayer == p.Id {
@@ -41,11 +42,12 @@ func (s *MatchState) EnterDenyMoney() {
 		}
 	}
 }
-func (s *MatchState) NextDenyer() (end bool) {
 
+func (s *MatchState) NextDenyer() (end bool) {
 	nextPlayer := s.GetNextPlayer(s.CurrentDenyer)
+	action, _ := s.Actions.Last()
 	s.CurrentDenyer = nextPlayer
-	if nextPlayer == s.CurrentPlayerID {
+	if nextPlayer == action.GetActor() {
 		return true
 	}
 	for _, p := range s.PlayerInfos {
