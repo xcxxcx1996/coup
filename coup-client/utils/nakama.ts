@@ -58,6 +58,7 @@ class Nakama {
         const matches = await this.client.rpc(this.session, rpcid, {
             player_num: playerNum,
         });
+        console.log("matches:",matches)
         this.matchID = (matches.payload as { matchIds: string[] }).matchIds[0];
         saveInStorage("matchID", this.matchID);
         await this.socket.connect(this.session, true);
