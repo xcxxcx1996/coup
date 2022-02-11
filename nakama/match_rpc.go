@@ -37,7 +37,7 @@ func rpcFindMatch(marshaler *protojson.MarshalOptions, unmarshaler *protojson.Un
 			return "", errUnmarshal
 		}
 
-		maxSize := 1
+		maxSize := 4
 		var fast int
 
 		if request.Fast {

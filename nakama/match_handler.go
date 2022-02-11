@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"log"
 	"math/rand"
 	"time"
 
@@ -19,8 +18,7 @@ import (
 const (
 	moduleName = "coup"
 
-	tickRate = 5
-	// MAX_PLAYER_NUM = 2
+	tickRate    = 5
 	maxEmptySec = 5
 	// delayBetweenGamesSec = 5
 	turnTimeFastSec   = 10
@@ -103,14 +101,12 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 	for _, presence := range Presences {
 		s.EmptyTicks = 0
 		s.Presences[presence.GetUserId()] = presence
-
 		s.JoinsInProgress--
 
 		// Check if we must send a message to this user to update them on the current game state.
 		var opCode api.OpCode
 		var msg proto.Message
 		if s.Playing {
-			log.Print("重新加入")
 			// There's a game still currently in progress, the player is re-joining after a disconnect. Give them a state update.
 			opCode = api.OpCode_OPCODE_UPDATE
 			msg = &api.Update{
