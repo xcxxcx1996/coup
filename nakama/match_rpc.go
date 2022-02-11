@@ -47,7 +47,7 @@ func rpcFindMatch(marshaler *protojson.MarshalOptions, unmarshaler *protojson.Un
 		if playerNum <= 2 {
 			playerNum = 2
 		}
-		query := fmt.Sprintf("+label.open:1 +label.fast:%d +label.player_num:%d", fast, playerNum)
+		query := fmt.Sprintf("+label.open:1 +label.fast:%d +label.playerNum:%d", fast, playerNum)
 		matchIDs := make([]string, 0, 10)
 		matches, err := nk.MatchList(ctx, 10, true, "", nil, &maxSize, query)
 		if err != nil {
