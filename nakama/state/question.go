@@ -1,9 +1,12 @@
 package state
 
-import "github.com/xcxcx1996/coup/api"
+import (
+	"log"
+
+	"github.com/xcxcx1996/coup/api"
+)
 
 // ==========状态改变==========================
-//
 func (s *MatchState) EnterQuestion() {
 	//下一个用户进入question状态
 	s.State = api.State_QUESTION
@@ -18,11 +21,14 @@ func (s *MatchState) EnterQuestion() {
 		}
 	}
 }
-	
+
 func (s *MatchState) NextQuestionor() (end bool) {
 	nextPlayer := s.GetNextPlayer(s.Currentquestioner)
-	action, _ := s.Actions.Last()
-
+	action, err := s.Actions.Last()
+	s.Currentquestioner = nextPlayer
+	if err != nil {
+		log.Println("error:", err)
+	}
 	if nextPlayer == action.GetActor() {
 		return true
 	}
