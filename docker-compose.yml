@@ -51,7 +51,7 @@ services:
       - "3000:3000"
     container_name: coup-client
     environment:
-      - HOST=backend 
+      - NEXT_PUBLIC_HOST=backend 
     depends_on:
       - nakama
     volumes:
