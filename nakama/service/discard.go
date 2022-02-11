@@ -63,5 +63,6 @@ func (serv *MatchService) Discard(dispatcher runtime.MatchDispatcher, message ru
 		action.AfterQuestion(dispatcher, state)
 		return
 	}
+	state.NextTurn()
 	return
 }

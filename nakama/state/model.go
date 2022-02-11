@@ -38,8 +38,11 @@ type MatchState struct {
 }
 
 func (s *MatchState) NextTurn() {
+
 	s.ActionComplete = false
+	s.Actions.Clear()
 	s.State = api.State_START
+	
 	var nextPlayer string
 	for i, p := range s.PlayerSequence {
 		if s.CurrentPlayerID == p {

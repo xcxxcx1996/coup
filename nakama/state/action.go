@@ -9,12 +9,14 @@ import (
 
 type ActionState int
 
+
 const (
 	ASSASSIN = iota
 	NO_ONE_DENY
 	BEFORE_CHANGE
 	COMPLETE_CHANGE
 )
+
 
 type IAction interface {
 	// 开始动作
@@ -29,13 +31,21 @@ type IAction interface {
 	GetActor() string
 }
 
+
 type Actions struct {
 	data []IAction
 }
 
+
+func (s *Actions) Clear() {
+	s.data = []IAction{}
+}
+
+
 func (s *Actions) Push(item IAction) {
 	s.data = append(s.data, item)
 }
+
 
 func (s *Actions) Pop() (IAction, error) {
 	length := s.Length()
@@ -52,6 +62,7 @@ func (s *Actions) Pop() (IAction, error) {
 		return item, nil
 	}
 }
+
 
 func (s *Actions) ElementAt(index int) (IAction, error) {
 	length := len(s.data)
