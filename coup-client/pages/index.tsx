@@ -1,4 +1,11 @@
-import { Button, Input } from "@mui/material";
+import {
+    Button,
+    FormControl,
+    Input,
+    MenuItem,
+    Select,
+    SelectChangeEvent,
+} from "@mui/material";
 import type { NextPage } from "next";
 import styles from "../styles/Home.module.css";
 import React, { useCallback, useEffect, useState } from "react";
@@ -11,6 +18,7 @@ const Home: NextPage = () => {
     const [email, setEmail] = useState("");
     const [disableEmail, setDisableEmail] = useState(false);
     const [counter, setCounter] = useState(null);
+    const [playerNum, setPlayerNum] = useState(2);
     const router = useRouter();
     const matchDataHandler = useCallback(
         (matchData: MatchData) => {
@@ -44,6 +52,10 @@ const Home: NextPage = () => {
         }
     }, [counter, router, setCounter]);
 
+    const handlePlayerChange = (event: SelectChangeEvent<number>) => {
+        setPlayerNum(event.target.value as number);
+    };
+
     const handleChange = (
         e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
     ) => {
@@ -53,7 +65,7 @@ const Home: NextPage = () => {
     const handleClick = async () => {
         try {
             await nakamaClient.authenticate(email);
-            await nakamaClient.findMatch();
+            await nakamaClient.findMatch(playerNum);
         } catch (e) {
             console.log("-> e", e);
         }
@@ -73,6 +85,24 @@ const Home: NextPage = () => {
                         disabled={disableEmail}
                         error={!!email && !email.includes("@")}
                     />
+
+                    <FormControl
+                        variant="standard"
+                        sx={{ m: 1, minWidth: 120 }}
+                    >
+                        <Select
+                            labelId="demo-simple-select-standard-label"
+                            id="demo-simple-select-standard"
+                            value={playerNum}
+                            onChange={handlePlayerChange}
+                            label="Age"
+                        >
+                            <MenuItem value={2}>2人</MenuItem>
+                            <MenuItem value={3}>3人</MenuItem>
+                            <MenuItem value={4}>4人</MenuItem>
+                        </Select>
+                    </FormControl>
+
                     <Button
                         sx={{ width: "120px", m: 1 }}
                         variant="contained"

@@ -53,9 +53,11 @@ class Nakama {
         return retrieveInStorage("email");
     }
 
-    findMatch = async () => {
+    findMatch = async (playerNum: number) => {
         const rpcid = "find_match";
-        const matches = await this.client.rpc(this.session, rpcid, {});
+        const matches = await this.client.rpc(this.session, rpcid, {
+            player_num: playerNum,
+        });
         this.matchID = (matches.payload as { matchIds: string[] }).matchIds[0];
         saveInStorage("matchID", this.matchID);
         await this.socket.connect(this.session, true);
