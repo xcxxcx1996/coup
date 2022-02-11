@@ -1,7 +1,7 @@
 package state
 
 type MatchLabel struct {
-	PlayerNum int `json:"player_num"`
-	Open      int `json:"open"`
-	Fast      int `json:"fast"`
+	Size int `json:"size"`
+	Open int `json:"open"`
+	Fast int `json:"fast"`
 }

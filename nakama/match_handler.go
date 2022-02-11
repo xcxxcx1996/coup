@@ -44,14 +44,14 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 		logger.Error("invalid match init parameter \"fast\"")
 		return nil, 0, ""
 	}
-	playerNum, ok := params["playerNum"].(int64)
+	size, ok := params["size"].(int64)
 	if !ok {
 		logger.Error("invalid match init parameter \"fast\"")
 		return nil, 0, ""
 	}
 	Label := &model.MatchLabel{
-		PlayerNum: int(playerNum),
-		Open:      1,
+		Size: int(size),
+		Open: 1,
 	}
 	if fast {
 		Label.Fast = 1
@@ -88,7 +88,7 @@ func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logg
 	}
 
 	// Check if match is full.
-	if len(s.Presences)+s.JoinsInProgress >= s.Label.PlayerNum {
+	if len(s.Presences)+s.JoinsInProgress >= s.Label.Size {
 		return s, false, "match full"
 	}
 	// New player attempting to connect.
@@ -132,7 +132,7 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 	}
 
 	// Check if match was open to new players, but should now be closed.
-	if len(s.Presences) >= s.Label.PlayerNum && s.Label.Open != 0 {
+	if len(s.Presences) >= s.Label.Size && s.Label.Open != 0 {
 		s.Label.Open = 0
 		if labelJSON, err := json.Marshal(s.Label); err != nil {
 			logger.Error("error encoding Label: %v", err)
@@ -178,7 +178,7 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 		}
 
 		// Check if we need to update the Label so the match now advertises itself as open to join.
-		if len(s.Presences) < s.Label.PlayerNum && s.Label.Open != 1 {
+		if len(s.Presences) < s.Label.Size && s.Label.Open != 1 {
 			s.Label.Open = 1
 			if labelJSON, err := json.Marshal(s.Label); err != nil {
 				logger.Error("error encoding Label: %v", err)
@@ -190,7 +190,7 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 		}
 
 		// Check if we have enough players to start a game.
-		if len(s.Presences) < s.Label.PlayerNum {
+		if len(s.Presences) < s.Label.Size {
 			return s
 		}
 		// Check if enough time has passed since the last game.
@@ -219,7 +219,6 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 	for _, message := range messages {
 		serv.Dispatch(message, s, dispatcher)
 	}
-
 	// Keep track of the time remaining for the player to submit their move. Idle players forfeit.
 	if s.Playing {
 		s.DeadlineRemainingTicks--
