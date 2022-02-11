@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/heroiclabs/nakama-common/runtime"
@@ -41,6 +42,7 @@ func (serv *MatchService) Discard(dispatcher runtime.MatchDispatcher, message ru
 			SendNotification(info, dispatcher)
 			buf, _ = global.Marshaler.Marshal(&api.Done{Winner: state.PlayerInfos[state.PlayerSequence[0]]})
 			_ = dispatcher.BroadcastMessage(int64(api.OpCode_OPCODE_DONE), buf, nil, nil, true)
+			return errors.New("matchEnd")
 		}
 		state.NextTurn()
 		// 角色死亡quit

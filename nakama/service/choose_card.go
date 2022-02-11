@@ -32,7 +32,7 @@ func (serv *MatchService) CompleteChangeCard(dispatcher runtime.MatchDispatcher,
 			}
 		}
 	}
-	info := fmt.Sprintf("<p>%v complete the card change.</p>", message.GetUsername())
+	info := fmt.Sprintf("<p>%v completes the card change.</p>", message.GetUsername())
 	SendNotification(info, dispatcher)
 	state.PlayerInfos[state.CurrentPlayerID].Cards = reservedCards
 	state.SufferDeck()

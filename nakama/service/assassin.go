@@ -51,7 +51,7 @@ func (a Assassin) AfterQuestion(dispatcher runtime.MatchDispatcher, state *model
 // 玩家进入刺杀阶段
 func (a Assassin) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.MatchState) error {
 	state.ActionComplete = true
-	info := fmt.Sprintln(`<p> Deny end, assassin execute.</p>`)
+	info := fmt.Sprintln(`<p> Denying ends, assassin executes.</p>`)
 	SendNotification(info, dispatcher)
 	state.EnterDicardState(a.Assassinated)
 	return nil
@@ -60,7 +60,7 @@ func (a Assassin) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.Mat
 // 行动被停止 1.被成功质疑，2.被阻止
 func (a Assassin) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState) error {
 	state.ActionComplete = true
-	info := fmt.Sprintln("<p> Assassin was stopped.</p>")
+	info := fmt.Sprintln("<p> Assassin is stopped.</p>")
 	SendNotification(info, dispatcher)
 	return nil
 }

@@ -19,9 +19,9 @@ import (
 const (
 	moduleName = "coup"
 
-	tickRate       = 5
-	MAX_PLAYER_NUM = 2
-	maxEmptySec    = 5
+	tickRate = 5
+	// MAX_PLAYER_NUM = 2
+	maxEmptySec = 5
 	// delayBetweenGamesSec = 5
 	turnTimeFastSec   = 10
 	nextStartSec      = 5
@@ -44,8 +44,14 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 		logger.Error("invalid match init parameter \"fast\"")
 		return nil, 0, ""
 	}
+	playerNum, ok := params["playerNum"].(int64)
+	if !ok {
+		logger.Error("invalid match init parameter \"fast\"")
+		return nil, 0, ""
+	}
 	Label := &model.MatchLabel{
-		Open: 1,
+		PlayerNum: int(playerNum),
+		Open:      1,
 	}
 	if fast {
 		Label.Fast = 1
@@ -82,7 +88,7 @@ func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logg
 	}
 
 	// Check if match is full.
-	if len(s.Presences)+s.JoinsInProgress >= MAX_PLAYER_NUM {
+	if len(s.Presences)+s.JoinsInProgress >= s.Label.PlayerNum {
 		return s, false, "match full"
 	}
 	// New player attempting to connect.
@@ -126,7 +132,7 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 	}
 
 	// Check if match was open to new players, but should now be closed.
-	if len(s.Presences) >= MAX_PLAYER_NUM && s.Label.Open != 0 {
+	if len(s.Presences) >= s.Label.PlayerNum && s.Label.Open != 0 {
 		s.Label.Open = 0
 		if labelJSON, err := json.Marshal(s.Label); err != nil {
 			logger.Error("error encoding Label: %v", err)
@@ -172,7 +178,7 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 		}
 
 		// Check if we need to update the Label so the match now advertises itself as open to join.
-		if len(s.Presences) < MAX_PLAYER_NUM && s.Label.Open != 1 {
+		if len(s.Presences) < s.Label.PlayerNum && s.Label.Open != 1 {
 			s.Label.Open = 1
 			if labelJSON, err := json.Marshal(s.Label); err != nil {
 				logger.Error("error encoding Label: %v", err)
@@ -184,12 +190,12 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 		}
 
 		// Check if we have enough players to start a game.
-		if len(s.Presences) < MAX_PLAYER_NUM {
+		if len(s.Presences) < s.Label.PlayerNum {
 			return s
 		}
 		// Check if enough time has passed since the last game.
 		if s.NextGameRemainingTicks > 0 {
-			if s.DeadlineRemainingTicks%tickRate == 0 {
+			if s.NextGameRemainingTicks%tickRate == 0 {
 				buf, err := global.Marshaler.Marshal(&api.ReadyToStart{
 					NextGameStart: s.NextGameRemainingTicks / tickRate,
 				})
@@ -202,7 +208,6 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 			s.NextGameRemainingTicks--
 			return s
 		}
-
 		// We can start a game!
 		s.Playing = true
 		//初始化游戏
@@ -217,7 +222,6 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 
 	// Keep track of the time remaining for the player to submit their move. Idle players forfeit.
 	if s.Playing {
-
 		s.DeadlineRemainingTicks--
 		if s.DeadlineRemainingTicks%tickRate == 0 {
 			buf, _ := global.Marshaler.Marshal(&api.Tick{Deadline: s.DeadlineRemainingTicks / tickRate})

@@ -216,6 +216,7 @@ message Dead{
 message RpcFindMatchRequest {
     // // User can choose a fast or normal speed match.
     bool fast = 1;
+    int64 player_num=2;
 }
 message DenySteal{
     bool is_deny=1;

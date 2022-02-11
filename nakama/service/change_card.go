@@ -61,7 +61,7 @@ func (c ChangeCard) AfterDeny(dispatcher runtime.MatchDispatcher, state *model.M
 // 被质疑成功，停止
 func (c ChangeCard) Stop(dispatcher runtime.MatchDispatcher, state *model.MatchState) (err error) {
 	state.ActionComplete = true
-	info := fmt.Sprintln("<p>Changing card was stoped.</p>")
+	info := fmt.Sprintln("<p>Changing card is stoped.</p>")
 	SendNotification(info, dispatcher)
 	return nil
 }
