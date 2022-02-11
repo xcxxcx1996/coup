@@ -284,6 +284,7 @@ export const ControlPanel = () => {
 
     useEffect(() => {
         let timeout: ReturnType<typeof setTimeout>;
+        console.log("-> gameEnd", gameEnd);
         if (gameEnd) {
             nakamaClient
                 .leaveMatch()

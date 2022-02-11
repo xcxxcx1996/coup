@@ -22,6 +22,8 @@ export interface GameContext {
     infos: string[];
     client: PlayerInfo;
     gameEnd: boolean;
+    gameStart: boolean;
+    counter: number;
 }
 
 const initialPlayer: PlayerInfo = {
@@ -42,6 +44,8 @@ export const gameContext = createContext<GameContext>({
     infos: [],
     client: null,
     gameEnd: false,
+    gameStart: false,
+    counter: null,
 });
 
 export interface PlayerInfo {
@@ -86,13 +90,23 @@ export const GameContextProvider: FC = ({ children }) => {
     const [chooseCards, setChooseCards] = useState<ICard[]>([]);
     const [infos, setInfos] = useState<string[]>([]);
     const [client, setClient] = useState<PlayerInfo>(initialPlayer);
+    const [gameStart, setGameStart] = useState(false);
     const [gameEnd, setGameEnd] = useState(false);
+    const [counter, setCounter] = useState<number>(null);
     useEffect(() => {
         nakamaClient.socket.onmatchdata = (matchData: MatchData) => {
             console.log("-> matchData", matchData);
             switch (matchData.op_code) {
+                case OP_CODE.READY_START:
+                    const nextGameStart = matchData.data.nextGameStart;
+                    setCounter(parseInt(nextGameStart));
+                    break;
                 case OP_CODE.START:
                 case OP_CODE.UPDATE:
+                    if (matchData.op_code === OP_CODE.START) {
+                        setGameStart(true);
+                        setCounter(null);
+                    }
                     const playerInfos: PlayerInfos = matchData.data.playerInfos;
                     const userId = nakamaClient.session
                         ? nakamaClient.session.user_id
@@ -121,6 +135,7 @@ export const GameContextProvider: FC = ({ children }) => {
                         ...infos,
                         `${winner.name}获胜，即将回到首页`,
                     ]);
+                    setGameStart(false);
                     setGameEnd(true);
             }
         };
@@ -132,6 +147,8 @@ export const GameContextProvider: FC = ({ children }) => {
     useEffect(() => {
         if (!nakamaClient.session) {
             setShouldReconnect(true);
+        } else {
+            setShouldReconnect(false);
         }
     }, [nakamaClient.session, setShouldReconnect]);
 
@@ -155,6 +172,8 @@ export const GameContextProvider: FC = ({ children }) => {
                 chooseCards,
                 infos,
                 gameEnd,
+                gameStart,
+                counter,
             }}
         >
             {children}

@@ -8,35 +8,17 @@ import {
 } from "@mui/material";
 import type { NextPage } from "next";
 import styles from "../styles/Home.module.css";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { nakamaClient } from "../utils/nakama";
 import { useRouter } from "next/router";
-import { MatchData } from "@heroiclabs/nakama-js/socket";
-import { OP_CODE } from "../constants/op_code";
+import { gameContext } from "../contexts/gameContext";
 
 const Home: NextPage = () => {
     const [email, setEmail] = useState("");
     const [disableEmail, setDisableEmail] = useState(false);
-    const [counter, setCounter] = useState(null);
     const [playerNum, setPlayerNum] = useState(2);
     const router = useRouter();
-    const matchDataHandler = useCallback(
-        (matchData: MatchData) => {
-            console.log("-> start matchData", matchData);
-            if (matchData.op_code === OP_CODE.READY_START) {
-                const nextGameStart = matchData.data.nextGameStart;
-                setCounter(parseInt(nextGameStart));
-            }
-        },
-        [setCounter]
-    );
-
-    useEffect(() => {
-        nakamaClient.socket.onmatchdata = matchDataHandler;
-        return () => {
-            setCounter(0);
-        };
-    }, [matchDataHandler, setCounter]);
+    const { counter, gameStart } = useContext(gameContext);
 
     useEffect(() => {
         const email = nakamaClient.getUserEmail();
@@ -47,10 +29,10 @@ const Home: NextPage = () => {
     }, []);
 
     useEffect(() => {
-        if (counter === 0) {
+        if (gameStart) {
             router.push("in-game");
         }
-    }, [counter, router, setCounter]);
+    }, [gameStart]);
 
     const handlePlayerChange = (event: SelectChangeEvent<number>) => {
         setPlayerNum(event.target.value as number);
