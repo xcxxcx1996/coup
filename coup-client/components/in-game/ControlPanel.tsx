@@ -122,9 +122,7 @@ export const AbilityBtn = ({
 export const AbilityDialog = (props: AbilityProps) => {
     const { open, handleClose } = props;
     const { users, client } = useContext(gameContext);
-    const targetUsers = users.filter(
-        (user: IUser) => user.id !== client.id && user.roles.length
-    );
+    const targetUsers = users.filter((user: IUser) => user.id !== client.id);
     const disabled = useAbility();
     const handleClick = (ability: () => Promise<void>) => {
         return async () => {
@@ -286,6 +284,7 @@ export const ControlPanel = () => {
 
     useEffect(() => {
         let timeout: ReturnType<typeof setTimeout>;
+        console.log("-> gameEnd", gameEnd);
         if (gameEnd) {
             nakamaClient
                 .leaveMatch()
