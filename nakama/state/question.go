@@ -42,7 +42,7 @@ func (s *MatchState) NextQuestionor() (end bool) {
 	return false
 }
 
-// 质疑是否成功
+// 质疑是否成功 如果没有质疑成功，如果有质疑失败
 func (s *MatchState) ValidQuestion() (ok bool) {
 	// getRole
 	action, err := s.Actions.Last()
@@ -57,5 +57,5 @@ func (s *MatchState) ValidQuestion() (ok bool) {
 	if has {
 		s.ChangeSingleCard(cardId, action.GetActor())
 	}
-	return has
+	return !has
 }
