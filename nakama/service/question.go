@@ -31,6 +31,10 @@ func (serv *MatchService) Questioning(dispatcher runtime.MatchDispatcher, messag
 		} else {
 			// 质疑失败 自己进入弃牌
 			info := fmt.Sprintf(`<p><span style="color:red;">%v</span> question <span style="color:red;">failed</span> and <span style="color:red;">%v</span> is discarding</p >`, message.GetUsername(), message.GetUsername())
+			// action, _ := state.Actions.Last()
+			// role := action.GetRole()
+			// state.ChangeSingleCardByRole(role, action.GetActor())
+			// log.Println(action.GetRole())
 			SendNotification(info, dispatcher)
 			state.EnterDicardState(message.GetUserId())
 		}

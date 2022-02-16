@@ -53,9 +53,9 @@ func (s *MatchState) ValidQuestion() (ok bool) {
 	// get player
 	cards := s.PlayerInfos[action.GetActor()].Cards
 	cardId, has := hasCard(role, cards)
-	if !ok {
-		return !has
+	// 如果玩家没有卡牌，那么
+	if has {
+		s.ChangeSingleCard(cardId, action.GetActor())
 	}
-	s.ChangeSingleCard(cardId, action.GetActor())
 	return has
 }
